@@ -1,0 +1,16 @@
+[package]
+name = "rustml-examples"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+rustml = { path = "../rustml" }
+csv = "1.1.6"
+
+[[example]]
+name = "digits"
+path = "digits.rs"
+
+[[example]]
+name = "medium_numbers"
+path = "medium_numbers.rs"

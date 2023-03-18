@@ -1,2 +1,3 @@
 /target
-/src/example_data/*
+/examples/data
+/Cargo.lock
