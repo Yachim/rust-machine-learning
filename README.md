@@ -168,6 +168,130 @@ sum = \sum_{i=0}^{n_z - 1} e^{z - max_z}
 
 ## Derivatives of cost functions
 
+<!-- partial derivative of C with respect to w^{(L)}_{jk} -->
+```math
+\frac{\partial C}{\partial w^{(L)}_{jk}} = {
+  \frac{\partial C}{\partial a^{(L)}_j}
+  \frac{\partial a^{(L)}_j}{\partial z^{(L)}_j}
+  \frac{\partial z^{(L)}_j}{\partial w^{(L)}_{jk}}
+}
+```
+
+<!-- partial derivative of C with respect to b^{(L)}_j -->
+```math
+\frac{\partial C}{\partial b^{(L)}_j} = {
+  \frac{\partial C}{\partial a^{(L)}_j}
+  \frac{\partial a^{(L)}_j}{\partial z^{(L)}_j}
+  \frac{\partial z^{(L)}_j}{\partial b^{(L)}_j}
+}
+```
+
+<!-- partial derivative of C with respect to a^{(L - 1)}_k -->
+```math
+\frac{\partial C}{\partial a^{(L - 1)}_k} = {
+  \sum_{j=0}^{n_L - 1}
+  \frac{\partial C}{\partial a^{(L)}_j}
+  \frac{\partial a^{(L)}_j}{\partial z^{(L)}_j}
+  \frac{\partial z^{(L)}_j}{\partial a^{(L - 1)}_k}
+}
+```
+
+<p align="center">
+  <sup>$L$...last layer of the network</sup>
+</p>
+
+The common part for all three equations:
+
+```math
+root^{(L)}_j = 
+  \frac{\partial C}{\partial a^{(L)}_j}
+  \frac{\partial a^{(L)}_j}{\partial z^{(L)}_j}
+```
+
+After substituting $root$:
+
+<!-- partial derivative of C with respect to w^{(L)}_{jk} (with root) -->
+```math
+\frac{\partial C}{\partial w^{(L)}_{jk}} = {
+  root^{(L)}_j
+  \frac{\partial z^{(L)}_j}{\partial w^{(L)}_{jk}}
+}
+```
+
+<!-- partial derivative of C with respect to b^{(L)}_j (with root) -->
+```math
+\frac{\partial C}{\partial b^{(L)}_j} = {
+  root^{(L)}_j
+  \frac{\partial z^{(L)}_j}{\partial b^{(L)}_j}
+}
+```
+
+<!-- partial derivative of C with respect to a^{(L - 1)}_k (with root) -->
+```math
+\frac{\partial C}{\partial a^{(L - 1)}_k} = {
+  \sum_{j=0}^{n_L - 1}
+  root^{(L)}_j
+  \frac{\partial z^{(L)}_j}{\partial a^{(L - 1)}_k}
+}
+```
+
+<br>
+
+<!-- partial derivative of z^{(L)}_j with respect to w^{(L)}_{jk} -->
+```math
+\frac{\partial z^{(L)}_j}{\partial w^{(L)}_{jk}} =
+  a^{(L - 1)}_k
+```
+
+<!-- partial derivative of z^{(L)}_j with respect to b^{(L)}_j -->
+```math
+\frac{\partial z^{(L)}_j}{\partial b^{(L)}_j} = 
+  1
+```
+<!-- partial derivative of z^{(L)}_j with respect to a^{(L - 1)}_k -->
+```math
+\frac{\partial z^{(L)}_j}{\partial a^{(L - 1)}_k} =
+  w^{(L)}_{jk}
+```
+
+For any layer $l$ in the network:
+
+<!-- partial derivative of C with respect to w^{(l)}_{jk} -->
+```math
+\frac{\partial C}{\partial w^{(l)}_{jk}} = {
+  \frac{\partial C}{\partial a^{(l)}_j}
+  \frac{\partial a^{(l)}_j}{\partial z^{(l)}_j}
+  a^{(l - 1)}_k
+}
+```
+
+<!-- partial derivative of C with respect to b^{(l)}_j -->
+```math
+\frac{\partial C}{\partial b^{(l)}_j} = {
+  \frac{\partial C}{\partial a^{(l)}_j}
+  \frac{\partial a^{(l)}_j}{\partial z^{(l)}_j}
+}
+```
+
+Where:
+
+<!-- partial derivative of C with respect to a^{(l)}_k if l = L -->
+```math
+\frac{\partial C}{\partial a^{(l)}_j} = \frac{\partial C}{\partial a^{(L)}_j} \qquad 
+\textrm{if $l=L$}
+```
+
+<!-- partial derivative of C with respect to a^{(l)}_k if l != L -->
+```math
+\frac{\partial C}{\partial a^{(l)}_j} = {
+  \sum_{i=0}^{n_{l + 1} - 1}
+  \frac{\partial C}{\partial a^{(l + 1)}_j}
+  \frac{\partial a^{(l + 1)}_j}{\partial z^{(l + 1)}_j}
+  w^{(l + 1)}_{ij}
+} \qquad
+\textrm{otherwise}
+```
+
 ### Mean Squared Error (MSE)
 
 <!-- the definition of mse -->
@@ -186,100 +310,3 @@ C = MSE = {
 ```math
 \frac{\partial C}{\partial a^{(L)}_j} = 2(a^{(L)}_j - y_j)
 ```
-
-<br>
-
-<!-- partial derivative of C with respect to w^{(L)}_{jk} -->
-```math
-\frac{\partial C}{\partial w^{(L)}_{jk}} = {
-  \frac{\partial C}{\partial a^{(L)}_j}
-  \frac{\partial a^{(L)}_j}{\partial z^{(L)}_j}
-  \frac{\partial z^{(L)}_j}{\partial w^{(L)}_{jk}}
-} = {
-  2(a^{(L)}_j - y_j)
-  f_L'(z^{(L)}_j)
-  a^{(L - 1)}_k
-}
-```
-
-<!-- partial derivative of C with respect to b^{(L)}_j -->
-```math
-\frac{\partial C}{\partial b^{(L)}_j} = {
-  \frac{\partial C}{\partial a^{(L)}_j}
-  \frac{\partial a^{(L)}_j}{\partial z^{(L)}_j}
-  \frac{\partial z^{(L)}_j}{\partial b^{(L)}_j}
-} = {
-  2(a^{(L)}_j - y_j)
-  f_L'(z^{(L)}_j)
-  1
-} = {
-  2(a^{(L)}_j - y_j)
-  f_L'(z^{(L)}_j)
-}
-```
-
-<!-- partial derivative of C with respect to a^{(L - 1)}_k -->
-```math
-\frac{\partial C}{\partial a^{(L - 1)}_k} = {
-  \sum_{j=0}^{n_L - 1}
-  \frac{\partial C}{\partial a^{(L)}_j}
-  \frac{\partial a^{(L)}_j}{\partial z^{(L)}_j}
-  \frac{\partial z^{(L)}_j}{\partial a^{(L - 1)}_k}
-} = {
-  \sum_{j=0}^{n_L - 1}
-  2(a^{(L)}_j - y_j)
-  f_L'(z^{(L)}_j)
-  w^{(L)}_{jk}
-}
-```
-
-For any layer $l$ in the network:
-
-<!-- partial derivative of C with respect to w^{(l)}_{jk} -->
-```math
-\frac{\partial C}{\partial w^{(l)}_{jk}} = {
-  \frac{\partial C}{\partial a^{(l)}_j}
-  f_l'(z^{(l)}_j)
-  a^{(l - 1)}_k
-}
-```
-
-<!-- partial derivative of C with respect to b^{(l)}_j -->
-```math
-\frac{\partial C}{\partial b^{(l)}_j} = {
-  \frac{\partial C}{\partial a^{(l)}_j}
-  f_l'(z^{(l)}_j)
-}
-```
-
-Where:
-
-<!-- partial derivative of C with respect to a^{(l)}_k if l = L -->
-```math
-\frac{\partial C}{\partial a^{(l)}_j} = 2(a^{(L)}_j - y_j) \qquad 
-\textrm{if $l=L$}
-```
-
-<p align="center">
-  <sup>$L$...last layer of the network</sup>
-</p>
-
-<!-- partial derivative of C with respect to a^{(l)}_k if l != L -->
-```math
-\frac{\partial C}{\partial a^{(l)}_j} = {
-  \sum_{i=0}^{n_{l + 1} - 1}
-  \frac{\partial C}{\partial a^{(l + 1)}_i}
-  f_{l + 1}'(z^{(l + 1)}_i)
-  w^{(l + 1)}_{ij}
-} \qquad
-\textrm{otherwise}
-```
-
-## The backpropagation algorithm
-
-1) iterate all layers backwards (as `l`)
-   1) iterate neurons in the layer l (as `j`)
-      1) compute $\frac{\partial C}{\partial a^{(l)}_j}$ and save it in an array
-      2) compute $\frac{\partial C}{\partial b^{(l)}_j}$
-      3) iterate neurons in the layer $l - 1$ (as `k`)
-          1) compute $\frac{\partial C}{\partial w^{(l)}_{jk}}$
