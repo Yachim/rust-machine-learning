@@ -291,11 +291,11 @@ Where:
   \sum_{j=0}^{n_{l + 1} - 1}
   \frac{\partial C}{\partial a^{(l + 1)}_j}
   \frac{\partial a^{(l + 1)}_j}{\partial z^{(l + 1)}_j}
-  w^{(l + 1)}_{jk}
+  w^{(l + 1)}_{ij}
 } = {
   \sum_{j=0}^{n_{l + 1} - 1}
   root^{(l + 1)}_j
-  w^{(l + 1)}_{jk}
+  w^{(l + 1)}_{ij}
 } \qquad
 \textrm{otherwise}
 ```
