@@ -157,7 +157,7 @@ The common part for all three equations:
 ```math
 root^{(L)}_j = 
   \frac{\partial C}{\partial a^{(L)}_j}
-  f'_{l}(z^{(L)}_j)
+  f'_{L}(z^{(L)}_j)
 ```
 
 After substituting $root$:
@@ -188,6 +188,12 @@ After substituting $root$:
 
 For any layer $l$ in the network:
 
+```math
+root^{(l)}_j = 
+  \frac{\partial C}{\partial a^{(l)}_j}
+  f'_{l}(z^{(l)}_j)
+```
+
 <!-- partial derivative of C with respect to w^{(l)}_{jk} -->
 ```math
 \frac{\partial C}{\partial w^{(l)}_{jk}} = {
@@ -207,6 +213,20 @@ For any layer $l$ in the network:
   f'_{l}(z^{(L)}_j)
 } =
   root^{(l)}_j
+```
+
+<!-- partial derivative of C with respect to a^{(L - 1)}_k -->
+```math
+\frac{\partial C}{\partial a^{(l - 1)}_k} = {
+  \sum_{j=0}^{n_l - 1}
+  \frac{\partial C}{\partial a^{(l)}_j}
+  \frac{\partial a^{(l)}_j}{\partial z^{(l)}_j}
+  \frac{\partial z^{(l)}_j}{\partial a^{(l - 1)}_k}
+} = {
+  \sum_{j=0}^{n_l - 1}
+  root^{(l)}_j
+  w^{(l)}_{jk}
+}
 ```
 
 Where:
@@ -230,7 +250,7 @@ Where:
   f'_{l + 1}(z^{(l + 1)}_i)
   w^{(l + 1)}_{ij}
 } = {
-  \sum_{j=0}^{n_{l + 1} - 1}
+  \sum_{i=0}^{n_{l + 1} - 1}
   root^{(l + 1)}_i
   w^{(l + 1)}_{ij}
 } \qquad
