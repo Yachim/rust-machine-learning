@@ -2,6 +2,7 @@
 name = "rustml_examples"
 version = "0.1.0"
 edition = "2021"
+authors = ["Jáchym Kohout <jachym.kohout@gmail.com>"]
 
 [dependencies]
 rustml = { path = "../rustml" }

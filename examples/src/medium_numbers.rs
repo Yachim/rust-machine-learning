@@ -1,6 +1,6 @@
 use rustml::{
     functions::{activation::SIGMOID, cost::MSE, input_normalizations::NO_NORMALIZATION},
-    network::Network,
+    network::{Network, NetworkConstructorType},
 };
 
 fn main() {
@@ -12,9 +12,8 @@ fn main() {
         (vec![0.0, 1.0, 1.0], vec![0.0]),
     ];
     let mut net = Network::new(
-        3,
-        vec![],
-        vec!["res"],
+        vec![3, 1],
+        NetworkConstructorType::Regression,
         vec![&SIGMOID],
         &MSE,
         &NO_NORMALIZATION,

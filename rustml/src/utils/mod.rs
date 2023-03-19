@@ -1,2 +1,2 @@
-pub mod csv_data;
+pub mod csv;
 pub mod math;

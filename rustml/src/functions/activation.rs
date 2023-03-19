@@ -2,8 +2,8 @@ use crate::functions::weight_init::{InitFn, HE, XAVIER};
 use std::f32::consts;
 
 pub struct ActivationFunction<'a> {
-    pub function: &'a dyn Fn(&Vec<f32>) -> Vec<f32>,
-    pub derivative: &'a dyn Fn(&Vec<f32>) -> Vec<f32>,
+    pub function: &'a dyn Fn(f32) -> f32,
+    pub derivative: &'a dyn Fn(f32) -> f32,
 
     pub description: &'a str,
 
@@ -17,16 +17,14 @@ pub struct ActivationFunction<'a> {
 
 /// Sigmoid activation function
 /// https://en.wikipedia.org/wiki/Sigmoid_function
-fn sigmoid(zs: &Vec<f32>) -> Vec<f32> {
-    zs.iter()
-        .map(|z| (1.0 / (1.0 + consts::E.powf(-z))))
-        .collect()
+fn sigmoid(z: f32) -> f32 {
+    1.0 / (1.0 + consts::E.powf(-z))
 }
 
 /// Derivative of the sigmoid activation function
-fn sigmoid_deriv(zs: &Vec<f32>) -> Vec<f32> {
-    let sig = sigmoid(zs);
-    sig.iter().map(|z| z * (1.0 - z)).collect()
+fn sigmoid_deriv(z: f32) -> f32 {
+    let sig = sigmoid(z);
+    sig * (1.0 - sig)
 }
 pub const SIGMOID: ActivationFunction = ActivationFunction {
     function: &sigmoid,
@@ -42,15 +40,21 @@ pub const SIGMOID: ActivationFunction = ActivationFunction {
 
 /// ReLU activation function
 /// https://en.wikipedia.org/wiki/Rectifier_(neural_networks)
-fn relu(zs: &Vec<f32>) -> Vec<f32> {
-    zs.iter().map(|z| if *z > 0.0 { *z } else { 0.0 }).collect()
+fn relu(z: f32) -> f32 {
+    if z > 0.0 {
+        z
+    } else {
+        0.0
+    }
 }
 
 /// Derivative of the ReLU activation function
-fn relu_deriv(zs: &Vec<f32>) -> Vec<f32> {
-    zs.iter()
-        .map(|z| if *z > 0.0 { 1.0 } else { 0.0 })
-        .collect()
+fn relu_deriv(z: f32) -> f32 {
+    if z > 0.0 {
+        1.0
+    } else {
+        0.0
+    }
 }
 pub const RELU: ActivationFunction = ActivationFunction {
     function: &relu,
@@ -64,6 +68,7 @@ pub const RELU: ActivationFunction = ActivationFunction {
     init_fn: &HE,
 };
 
+/*
 /// (stable) softmax activation function
 /// https://eli.thegreenplace.net/2016/the-softmax-function-and-its-derivative/
 fn softmax(zs: &Vec<f32>) -> Vec<f32> {
@@ -104,4 +109,4 @@ mod tests {
             .zip(expected)
             .all(|(val, expect)| (val - expect).abs() < 0.001));
     }
-}
+}*/
