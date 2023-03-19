@@ -262,6 +262,9 @@ For any layer $l$ in the network:
   \frac{\partial C}{\partial a^{(l)}_j}
   \frac{\partial a^{(l)}_j}{\partial z^{(l)}_j}
   a^{(l - 1)}_k
+} = {
+  root^{(l)}_j
+  a^{(l - 1)}_k
 }
 ```
 
@@ -270,7 +273,8 @@ For any layer $l$ in the network:
 \frac{\partial C}{\partial b^{(l)}_j} = {
   \frac{\partial C}{\partial a^{(l)}_j}
   \frac{\partial a^{(l)}_j}{\partial z^{(l)}_j}
-}
+} =
+  root^{(l)}_j
 ```
 
 Where:
@@ -284,10 +288,14 @@ Where:
 <!-- partial derivative of C with respect to a^{(l)}_k if l != L -->
 ```math
 \frac{\partial C}{\partial a^{(l)}_j} = {
-  \sum_{i=0}^{n_{l + 1} - 1}
+  \sum_{j=0}^{n_{l + 1} - 1}
   \frac{\partial C}{\partial a^{(l + 1)}_j}
   \frac{\partial a^{(l + 1)}_j}{\partial z^{(l + 1)}_j}
-  w^{(l + 1)}_{ij}
+  w^{(l + 1)}_{jk}
+} = {
+  \sum_{j=0}^{n_{l + 1} - 1}
+  root^{(l + 1)}_j
+  w^{(l + 1)}_{jk}
 } \qquad
 \textrm{otherwise}
 ```
