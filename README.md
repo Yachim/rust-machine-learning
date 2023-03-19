@@ -157,7 +157,7 @@ The common part for all three equations:
 ```math
 root^{(L)}_j = 
   \frac{\partial C}{\partial a^{(L)}_j}
-  f'_{l}(z^{(L)}_j)
+  f'_{L}(z^{(L)}_j)
 ```
 
 After substituting $root$:
@@ -187,6 +187,12 @@ After substituting $root$:
 ```
 
 For any layer $l$ in the network:
+
+```math
+root^{(l)}_j = 
+  \frac{\partial C}{\partial a^{(l)}_j}
+  f'_{l}(z^{(l)}_j)
+```
 
 <!-- partial derivative of C with respect to w^{(l)}_{jk} -->
 ```math
