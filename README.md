@@ -215,6 +215,20 @@ root^{(l)}_j =
   root^{(l)}_j
 ```
 
+<!-- partial derivative of C with respect to a^{(L - 1)}_k -->
+```math
+\frac{\partial C}{\partial a^{(l - 1)}_k} = {
+  \sum_{j=0}^{n_l - 1}
+  \frac{\partial C}{\partial a^{(l)}_j}
+  \frac{\partial a^{(l)}_j}{\partial z^{(l)}_j}
+  \frac{\partial z^{(l)}_j}{\partial a^{(l - 1)}_k}
+} = {
+  \sum_{j=0}^{n_l - 1}
+  root^{(l)}_j
+  w^{(l)}_{jk}
+}
+```
+
 Where:
 
 <!-- partial derivative of C with respect to a^{(l)}_k if l = L -->
