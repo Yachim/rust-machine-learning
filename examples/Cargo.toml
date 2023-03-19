@@ -1,5 +1,5 @@
 [package]
-name = "rustml-examples"
+name = "rustml_examples"
 version = "0.1.0"
 edition = "2021"
 
@@ -9,8 +9,8 @@ csv = "1.1.6"
 
 [[example]]
 name = "digits"
-path = "digits.rs"
+path = "src/digits.rs"
 
 [[example]]
 name = "medium_numbers"
-path = "medium_numbers.rs"
+path = "src/medium_numbers.rs"

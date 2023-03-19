@@ -1,2 +1,2 @@
 [workspace]
-members = ["rustml", "examples"]
+members = ["rustml", "examples", "cli"]
