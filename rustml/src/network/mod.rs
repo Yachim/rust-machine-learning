@@ -173,7 +173,11 @@ pub trait Predictable: BaseNetwork + Writable + Readable {
 }
 
 pub trait Trainable: Predictable {
-    fn backprop(&mut self);
+    /// returns derivatives in order: dC/dw, dC/db, dC/da
+    fn backprop_layer(&self) -> (LayerWeights, LayerNeurons, LayerNeurons);
+
+    /// returns derivatives in order: dC/dw, dC/db
+    fn backprop(&mut self) -> (LayerWeights, LayerNeurons);
 
     fn gradient_descent(&mut self);
 
