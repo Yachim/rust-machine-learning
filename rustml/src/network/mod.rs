@@ -1,7 +1,7 @@
 pub mod multi_layer_perceptron;
 
 use crate::{
-    functions::{activation::ActivationFunction, input_normalizations::NormalizationFn},
+    functions::{activation::ActivationFunction, input_normalizations::NormalizationFunc},
     utils::math::dot_product,
 };
 
@@ -34,7 +34,7 @@ pub trait BaseNetwork {
 
     fn get_activation_func(&self, layer_i: usize) -> &ActivationFunction;
 
-    fn get_normalization_func(&self) -> &NormalizationFn;
+    fn get_normalization_func(&self) -> &NormalizationFunc;
 }
 
 pub trait Readable {

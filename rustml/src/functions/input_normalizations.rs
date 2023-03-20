@@ -1,5 +1,5 @@
 // https://www.baeldung.com/cs/normalizing-inputs-artificial-neural-network
-pub struct NormalizationFn<'a> {
+pub struct NormalizationFunc<'a> {
     pub function: &'a dyn Fn(&Vec<f32>) -> Vec<f32>,
     pub description: &'a str,
     /// latex formula
@@ -9,7 +9,7 @@ pub struct NormalizationFn<'a> {
 fn no_func(input: &Vec<f32>) -> Vec<f32> {
     input.to_vec()
 }
-pub const NO_NORMALIZATION: NormalizationFn = NormalizationFn {
+pub const NO_NORMALIZATION: NormalizationFunc = NormalizationFunc {
     function: &no_func,
     description: "",
     formula: "",
@@ -38,7 +38,7 @@ fn normalization(input: &Vec<f32>) -> Vec<f32> {
         input.to_vec()
     }
 }
-pub const NORMALIZATION: NormalizationFn = NormalizationFn {
+pub const NORMALIZATION: NormalizationFunc = NormalizationFunc {
     function: &normalization,
     description: "",
     formula: "",
