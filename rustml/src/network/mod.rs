@@ -1,7 +1,7 @@
 pub mod multi_layer_perceptron;
 
 use crate::{
-    functions::{activation::ActivationFunction, input_normalizations::NormalizationFunc},
+    functions::{activation::ActivationFunc, input_normalizations::NormalizationFunc},
     utils::math::dot_product,
 };
 
@@ -30,9 +30,9 @@ type Shape = Vec<usize>;
 pub trait BaseNetwork {
     fn get_shape(&self) -> &Shape;
 
-    fn get_activation_funcs(&self) -> &Vec<&ActivationFunction>;
+    fn get_activation_funcs(&self) -> &Vec<&ActivationFunc>;
 
-    fn get_activation_func(&self, layer_i: usize) -> &ActivationFunction;
+    fn get_activation_func(&self, layer_i: usize) -> &ActivationFunc;
 
     fn get_normalization_func(&self) -> &NormalizationFunc;
 }

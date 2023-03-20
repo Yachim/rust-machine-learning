@@ -1,7 +1,7 @@
 use crate::functions::weight_init::{InitFn, HE, XAVIER};
 use std::f32::consts;
 
-pub struct ActivationFunction<'a> {
+pub struct ActivationFunc<'a> {
     pub function: &'a dyn Fn(f32) -> f32,
     pub derivative: &'a dyn Fn(f32) -> f32,
 
@@ -26,7 +26,7 @@ fn sigmoid_deriv(z: f32) -> f32 {
     let sig = sigmoid(z);
     sig * (1.0 - sig)
 }
-pub const SIGMOID: ActivationFunction = ActivationFunction {
+pub const SIGMOID: ActivationFunc = ActivationFunc {
     function: &sigmoid,
     derivative: &sigmoid_deriv,
 
@@ -56,7 +56,7 @@ fn relu_deriv(z: f32) -> f32 {
         0.0
     }
 }
-pub const RELU: ActivationFunction = ActivationFunction {
+pub const RELU: ActivationFunc = ActivationFunc {
     function: &relu,
     derivative: &relu_deriv,
 
