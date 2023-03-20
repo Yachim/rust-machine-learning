@@ -58,11 +58,11 @@ pub trait Writable {
 
     fn set_layers(&mut self, layers: NetworkNeurons);
 
-    fn set_layer(&mut self, layers: LayerNeurons, layer_i: usize);
+    fn set_layer(&mut self, layer: LayerNeurons, layer_i: usize);
 
     fn set_activated_layers(&mut self, activated_layers: NetworkNeurons);
 
-    fn set_activated_layer(&mut self, activated_layers: LayerNeurons, layer_i: usize);
+    fn set_activated_layer(&mut self, activated_layer: LayerNeurons, layer_i: usize);
 }
 
 pub trait Resetable: Writable + BaseNetwork {
