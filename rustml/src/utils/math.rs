@@ -12,13 +12,13 @@ pub fn dot_product(v1: &Vec<f32>, v2: &Vec<f32>) -> f32 {
     zip(v1, v2).map(|x| x.0 * x.1).sum::<f32>()
 }
 
-pub fn _add_arrs<'a>(v1: &Vec<f32>, v2: &Vec<f32>) -> Vec<f32> {
+pub fn _add_vecs<'a>(v1: &Vec<f32>, v2: &Vec<f32>) -> Vec<f32> {
     assert_eq!(v1.len(), v2.len());
 
     zip(v1, v2).map(|x| x.0 + x.1).collect()
 }
 
-pub fn _subtract_arrs<'a>(v1: &Vec<f32>, v2: &Vec<f32>) -> Vec<f32> {
+pub fn _subtract_vecs<'a>(v1: &Vec<f32>, v2: &Vec<f32>) -> Vec<f32> {
     assert_eq!(v1.len(), v2.len());
 
     zip(v1, v2).map(|x| x.0 - x.1).collect()
@@ -45,8 +45,8 @@ mod tests {
         let v1 = vec![5.0, 6.0];
         let v2 = vec![2.0, 4.0];
 
-        let sum = _add_arrs(&v1, &v2);
-        let diff = _subtract_arrs(&v1, &v2);
+        let sum = _add_vecs(&v1, &v2);
+        let diff = _subtract_vecs(&v1, &v2);
 
         assert_eq!(sum, vec![7.0, 10.0]);
         assert_eq!(diff, vec![3.0, 2.0]);

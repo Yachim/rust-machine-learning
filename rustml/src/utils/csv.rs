@@ -1,4 +1,4 @@
-use crate::network::{NetworkType, TrainingData};
+/*use crate::network::{NetworkType, TrainingData};
 use csv::{Error, Reader};
 use std::iter::zip;
 
@@ -68,4 +68,4 @@ pub fn load_unlabeled_data(file_path: &str, data_cols: Vec<usize>) -> Result<Vec
     }
 
     Ok(inputs)
-}
+}*/
