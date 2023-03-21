@@ -1,3 +1,3 @@
 pub mod functions;
-pub mod network;
+pub mod learning;
 pub mod utils;
