@@ -251,8 +251,24 @@ impl Backpropable for MultiLayerPerceptron<'_> {
         )
     }
 
-    fn backprop(&mut self) -> (LayerWeights, LayerNeurons) {
-        (vec![], vec![])
+    fn backprop(&self, expected: &NeuronWeights) -> (NetworkWeights, NetworkNeurons) {
+        let (last_layer_dws, last_layer_dbs, last_layer_das) =
+            self.backprop_layer(self.layers.len() - 1, None, Some(expected));
+
+        let mut dws: NetworkWeights = vec![last_layer_dws];
+        let mut dbs: NetworkNeurons = vec![last_layer_dbs];
+        let mut layer_das: LayerNeurons = last_layer_das;
+
+        for layer_i in (0..self.layers.len() - 1).rev() {
+            let (curr_layer_dws, curr_layer_dbs, curr_layer_das) =
+                self.backprop_layer(layer_i, Some(&layer_das), None);
+
+            dws.insert(0, curr_layer_dws);
+            dbs.insert(0, curr_layer_dbs);
+            layer_das = curr_layer_das;
+        }
+
+        (dws, dbs)
     }
 }
 
@@ -472,7 +488,7 @@ mod tests {
         );
     }
 
-    // same as test_feedforward_layer1
+    // same net as test_feedforward_layer1
     #[test]
     fn test_backprop_layer() {
         let mut net = MultiLayerPerceptron::new(vec![2, 3], vec![&RELU], &MSE, &NO_NORMALIZATION);
@@ -486,13 +502,77 @@ mod tests {
 
         assert_eq!(net.activated_layers[0], vec![18.0, 15.0, 22.0]);
 
-        let (dws, dbs, da) = net.backprop_layer(0, None, Some(&vec![15.0, 12.0, 20.0]));
-        assert_eq!(da, vec![6.0, 6.0, 4.0]);
+        let (dws, dbs, das) = net.backprop_layer(0, None, Some(&vec![15.0, 12.0, 20.0]));
+        assert_eq!(das, vec![6.0, 6.0, 4.0]);
         assert_eq!(
             dws,
             vec![vec![18.0, 12.0], vec![18.0, 12.0], vec![12.0, 8.0]]
         );
         assert_eq!(dbs, vec![6.0, 6.0, 4.0]);
+    }
+
+    // same net as test_feedforward
+    #[test]
+    fn test_backprop() {
+        let mut net =
+            MultiLayerPerceptron::new(vec![4, 3, 5], vec![&RELU, &RELU], &MSE, &NO_NORMALIZATION);
+
+        net.inputs = vec![2.0, 1.0, 3.0, 4.0];
+        net.weights = vec![
+            vec![
+                vec![3.0, 2.0, 1.0, 4.0],
+                vec![5.0, 1.0, 2.0, 3.0],
+                vec![4.0, 1.0, 2.0, 1.0],
+            ],
+            vec![
+                vec![1.0, 2.0, 5.0],
+                vec![3.0, 2.0, 1.0],
+                vec![2.0, 3.0, 5.0],
+                vec![1.0, 4.0, 1.0],
+                vec![4.0, 1.0, 2.0],
+            ],
+        ];
+        net.biases = vec![vec![3.0, 1.0, 2.0], vec![3.0, 2.0, 1.0, 2.0, 4.0]];
+
+        net.feedforward();
+
+        assert_eq!(net.normalized_inputs, vec![2.0, 1.0, 3.0, 4.0]);
+
+        assert_eq!(net.activated_layers[0], vec![30.0, 30.0, 21.0]);
+
+        assert_eq!(
+            net.activated_layers[1],
+            vec![198.0, 173.0, 256.0, 173.0, 196.0]
+        );
+
+        let (dws, dbs) = net.backprop(&vec![180.0, 165.0, 250.0, 170.0, 180.0]);
+
+        // manual calculations
+        // dC/da[1] = [36, 16, 12, 6, 32]
+        // dC/dw[1][0] = [1080, 1080, 756]
+        // dC/dw[1][1] = [480, 480, 336]
+        // dC/dw[1][2] = [360, 360, 252]
+        // dC/dw[1][3] = [180, 180, 126]
+        // dC/dw[1][4] = [960, 960, 672]
+        // dC/db[1] = [36, 16, 12, 6, 32]
+        //
+        // dC/da[0] = [242, 196, 326]
+        // dC/dw[0][0] = [484, 242, 726, 968]
+        // dC/dw[0][1] = [392, 196, 588, 784]
+        // dC/dw[0][2] = [652, 326, 978, 1304]
+        // dC/db[0] = [242, 196, 326]
+
+        assert_eq!(dws[1][0], vec![1080.0, 1080.0, 756.0]);
+        assert_eq!(dws[1][1], vec![480.0, 480.0, 336.0]);
+        assert_eq!(dws[1][2], vec![360.0, 360.0, 252.0]);
+        assert_eq!(dws[1][3], vec![180.0, 180.0, 126.0]);
+        assert_eq!(dws[1][4], vec![960.0, 960.0, 672.0]);
+        assert_eq!(dbs[1], vec![36.0, 16.0, 12.0, 6.0, 32.0]);
+
+        assert_eq!(dws[0][0], vec![484.0, 242.0, 726.0, 968.0]);
+        assert_eq!(dws[0][1], vec![392.0, 196.0, 588.0, 784.0]);
+        assert_eq!(dws[0][2], vec![652.0, 326.0, 978.0, 1304.0]);
+        assert_eq!(dbs[0], vec![242.0, 196.0, 326.0]);
     }
 
     /*#[test]

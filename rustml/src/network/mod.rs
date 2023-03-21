@@ -51,7 +51,7 @@ pub trait Backpropable {
     ) -> (LayerWeights, LayerNeurons, LayerNeurons);
 
     /// returns derivatives in order: dC/dw, dC/db
-    fn backprop(&mut self) -> (LayerWeights, LayerNeurons);
+    fn backprop(&self, expected: &NeuronWeights) -> (NetworkWeights, NetworkNeurons);
 }
 
 pub trait GradientDescendable: Backpropable + Predictable {
