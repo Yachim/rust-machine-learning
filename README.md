@@ -116,7 +116,7 @@ sum = \sum_{i=0}^{n_z - 1} e^{z - max_z}
   \frac{\partial z^{(L)}_j}{\partial w^{(L)}_{jk}}
 } = {
   \frac{\partial C}{\partial a^{(L)}_j}
-  f'_{l}(z^{(L)}_j)
+  f'_{L}(z^{(L)}_j)
   a^{(L - 1)}_k
 }
 ```
@@ -129,7 +129,7 @@ sum = \sum_{i=0}^{n_z - 1} e^{z - max_z}
   \frac{\partial z^{(L)}_j}{\partial b^{(L)}_j}
 } = {
   \frac{\partial C}{\partial a^{(L)}_j}
-  f'_{l}(z^{(L)}_j)
+  f'_{L}(z^{(L)}_j)
 }
 ```
 
@@ -143,7 +143,7 @@ sum = \sum_{i=0}^{n_z - 1} e^{z - max_z}
 } = {
   \sum_{j=0}^{n_L - 1}
   \frac{\partial C}{\partial a^{(L)}_j}
-  f'_{l}(z^{(L)}_j)
+  f'_{L}(z^{(L)}_j)
   w^{(L)}_{jk}
 }
 ```
@@ -152,56 +152,13 @@ sum = \sum_{i=0}^{n_z - 1} e^{z - max_z}
   <sup>$L$...last layer of the network</sup>
 </p>
 
-The common part for all three equations:
-
-```math
-root^{(L)}_j = 
-  \frac{\partial C}{\partial a^{(L)}_j}
-  f'_{L}(z^{(L)}_j)
-```
-
-After substituting $root$:
-
-<!-- partial derivative of C with respect to w^{(L)}_{jk} (with root) -->
-```math
-\frac{\partial C}{\partial w^{(L)}_{jk}} = {
-  root^{(L)}_j
-  a^{(L - 1)}_k
-}
-```
-
-<!-- partial derivative of C with respect to b^{(L)}_j (with root) -->
-```math
-\frac{\partial C}{\partial b^{(L)}_j} = {
-  root^{(L)}_j
-}
-```
-
-<!-- partial derivative of C with respect to a^{(L - 1)}_k (with root) -->
-```math
-\frac{\partial C}{\partial a^{(L - 1)}_k} = {
-  \sum_{j=0}^{n_L - 1}
-  root^{(L)}_j
-  w^{(L)}_{jk}
-}
-```
-
 For any layer $l$ in the network:
-
-```math
-root^{(l)}_j = 
-  \frac{\partial C}{\partial a^{(l)}_j}
-  f'_{l}(z^{(l)}_j)
-```
 
 <!-- partial derivative of C with respect to w^{(l)}_{jk} -->
 ```math
 \frac{\partial C}{\partial w^{(l)}_{jk}} = {
   \frac{\partial C}{\partial a^{(l)}_j}
-  f'_{l}(z^{(L)}_j)
-  a^{(l - 1)}_k
-} = {
-  root^{(l)}_j
+  f'_{l}(z^{(l)}_j)
   a^{(l - 1)}_k
 }
 ```
@@ -210,21 +167,16 @@ root^{(l)}_j =
 ```math
 \frac{\partial C}{\partial b^{(l)}_j} = {
   \frac{\partial C}{\partial a^{(l)}_j}
-  f'_{l}(z^{(L)}_j)
-} =
-  root^{(l)}_j
+  f'_{l}(z^{(l)}_j)
+}
 ```
 
-<!-- partial derivative of C with respect to a^{(L - 1)}_k -->
+<!-- partial derivative of C with respect to a^{(l - 1)}_k -->
 ```math
 \frac{\partial C}{\partial a^{(l - 1)}_k} = {
   \sum_{j=0}^{n_l - 1}
   \frac{\partial C}{\partial a^{(l)}_j}
-  \frac{\partial a^{(l)}_j}{\partial z^{(l)}_j}
-  \frac{\partial z^{(l)}_j}{\partial a^{(l - 1)}_k}
-} = {
-  \sum_{j=0}^{n_l - 1}
-  root^{(l)}_j
+  f'_{l}(z^{(l)}_j)
   w^{(l)}_{jk}
 }
 ```
@@ -248,10 +200,6 @@ Where:
   \sum_{i=0}^{n_{l + 1} - 1}
   \frac{\partial C}{\partial a^{(l + 1)}_i}
   f'_{l + 1}(z^{(l + 1)}_i)
-  w^{(l + 1)}_{ij}
-} = {
-  \sum_{i=0}^{n_{l + 1} - 1}
-  root^{(l + 1)}_i
   w^{(l + 1)}_{ij}
 } \qquad
 \textrm{otherwise}
