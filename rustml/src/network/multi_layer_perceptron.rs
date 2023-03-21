@@ -1,6 +1,6 @@
 use super::{
-    LayerNeurons, LayerWeights, NetworkNeurons, NetworkWeights, NeuronWeights, Predictable,
-    Resetable, Shape,
+    Backpropable, LayerNeurons, LayerWeights, NetworkNeurons, NetworkWeights, NeuronWeights,
+    Predictable, Resetable, Shape,
 };
 use crate::{
     functions::{
@@ -151,9 +151,114 @@ impl Predictable for MultiLayerPerceptron<'_> {
     }
 }
 
+impl Backpropable for MultiLayerPerceptron<'_> {
+    /// again, prev as in previous iteration ((i + 1)th layer)
+    fn backprop_layer(
+        &self,
+        layer_i: usize,
+        prev_cost_activation_derivatives: Option<&LayerNeurons>,
+        expected: Option<&NeuronWeights>,
+    ) -> (LayerWeights, LayerNeurons, LayerNeurons) {
+        // f'[l]
+        let activation_func_derivative = self.activation_funcs[layer_i].derivative;
+
+        // dC/dw[l]
+        let mut cost_weight_derivatives: LayerWeights = vec![];
+        // dC/db[l]
+        let mut cost_bias_derivatives: LayerNeurons = vec![];
+        // dC/da[l]
+        let mut cost_activation_derivatives: LayerNeurons = vec![];
+
+        // z[l]
+        let layer = &self.layers[layer_i];
+        // a[l]
+        let activated_layer = &self.activated_layers[layer_i];
+        // w[l]
+        let weights = &self.weights[layer_i];
+
+        let mut tmp = vec![];
+        let prev_cost_activation_derivatives_unwrapped = prev_cost_activation_derivatives
+            .unwrap_or_else(|| {
+                tmp = vec![];
+                &tmp
+            });
+
+        for neuron_i in 0..layer.len() {
+            // z[l][j]
+            let neuron = layer[neuron_i];
+            // a[l][j]
+            let activated_neuron = activated_layer[neuron_i];
+            // w[l][j]
+            let neuron_weights = &weights[neuron_i];
+
+            // dC/da[l][j]
+            let cost_activation_derivative = if layer_i == self.layers.len() - 1 {
+                // y[j]
+                let expected_neuron = expected.unwrap()[neuron_i];
+
+                let cost_func_derivative = self.cost_func.derivative;
+                cost_func_derivative(activated_neuron, expected_neuron)
+            } else {
+                // f'[l + 1]
+                let prev_activation_func_derivative = self.activation_funcs[layer_i + 1].derivative;
+
+                // z[l + 1]
+                let prev_layer = &self.layers[layer_i + 1];
+
+                // w[l + 1]
+                let prev_weights = &self.weights[layer_i + 1];
+
+                prev_cost_activation_derivatives_unwrapped
+                    .iter()
+                    .enumerate()
+                    .map(|(prev_neuron_i, a)| {
+                        a * prev_activation_func_derivative(prev_layer[prev_neuron_i])
+                            * prev_weights[prev_neuron_i][neuron_i]
+                    })
+                    .sum()
+            };
+            cost_activation_derivatives.push(cost_activation_derivative);
+
+            // da[l][j]/dz[l][j]
+            let activation_neuron_derivative = activation_func_derivative(neuron);
+
+            // dC/db[l][j]
+            let cost_bias_derivative = cost_activation_derivative * activation_neuron_derivative;
+            cost_bias_derivatives.push(cost_bias_derivative);
+
+            let mut new_neuron_weights: NeuronWeights = vec![];
+            for prev_neuron_i in 0..neuron_weights.len() {
+                // a[l - 1][k]
+                let connected_neuron = if layer_i == 0 {
+                    self.normalized_inputs[prev_neuron_i]
+                } else {
+                    self.activated_layers[layer_i - 1][prev_neuron_i]
+                };
+
+                // dC/dw[l][j][k]
+                let cost_weight_derivative =
+                    cost_activation_derivative * activation_neuron_derivative * connected_neuron;
+
+                new_neuron_weights.push(cost_weight_derivative);
+            }
+            cost_weight_derivatives.push(new_neuron_weights)
+        }
+
+        (
+            cost_weight_derivatives,
+            cost_bias_derivatives,
+            cost_activation_derivatives,
+        )
+    }
+
+    fn backprop(&mut self) -> (LayerWeights, LayerNeurons) {
+        (vec![], vec![])
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{MultiLayerPerceptron, Predictable};
+    use super::{Backpropable, MultiLayerPerceptron, Predictable};
     use crate::functions::{
         activation::{RELU, SIGMOID},
         cost::MSE,
@@ -245,7 +350,7 @@ mod tests {
         net.inputs = vec![3.0, 2.0];
 
         net.normalize_input();
-        assert_eq!(net.inputs, vec![3.0, 2.0]);
+        assert_eq!(net.normalized_inputs, vec![3.0, 2.0]);
 
         net.weights[0] = vec![vec![3.0, 4.0], vec![2.0, 4.0], vec![3.0, 5.0]];
         net.biases[0] = vec![1.0, 1.0, 3.0];
@@ -365,6 +470,29 @@ mod tests {
             net.activated_layers[1],
             vec![198.0, 173.0, 256.0, 173.0, 196.0]
         );
+    }
+
+    // same as test_feedforward_layer1
+    #[test]
+    fn test_backprop_layer() {
+        let mut net = MultiLayerPerceptron::new(vec![2, 3], vec![&RELU], &MSE, &NO_NORMALIZATION);
+
+        net.normalized_inputs = vec![3.0, 2.0];
+
+        net.weights[0] = vec![vec![3.0, 4.0], vec![2.0, 4.0], vec![3.0, 5.0]];
+        net.biases[0] = vec![1.0, 1.0, 3.0];
+
+        net.feedforward_layer(0);
+
+        assert_eq!(net.activated_layers[0], vec![18.0, 15.0, 22.0]);
+
+        let (dws, dbs, da) = net.backprop_layer(0, None, Some(&vec![15.0, 12.0, 20.0]));
+        assert_eq!(da, vec![6.0, 6.0, 4.0]);
+        assert_eq!(
+            dws,
+            vec![vec![18.0, 12.0], vec![18.0, 12.0], vec![12.0, 8.0]]
+        );
+        assert_eq!(dbs, vec![6.0, 6.0, 4.0]);
     }
 
     /*#[test]

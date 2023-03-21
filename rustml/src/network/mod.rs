@@ -34,16 +34,32 @@ pub trait Predictable {
     fn feedforward(&mut self);
 }
 
-pub trait Trainable: Predictable {
-    /// returns derivatives in order: dC/dw, dC/db, dC/da
-    fn backprop_layer(&self) -> (LayerWeights, LayerNeurons, LayerNeurons);
+pub trait Backpropable {
+    /// returns derivatives in order: dC/dw[l], dC/db[l], dC/da[l]
+    ///
+    /// prev_cost_activation_derivatives: dC/da[l + 1]
+    /// not needed only when computing last layer
+    ///
+    /// expected: only needed when computing last_layer
+    ///
+    /// prev as in previous iteration (next) since the iteration should be backwards
+    fn backprop_layer(
+        &self,
+        layer_i: usize,
+        prev_cost_activation_derivatives: Option<&LayerNeurons>,
+        expected: Option<&NeuronWeights>,
+    ) -> (LayerWeights, LayerNeurons, LayerNeurons);
 
     /// returns derivatives in order: dC/dw, dC/db
     fn backprop(&mut self) -> (LayerWeights, LayerNeurons);
+}
 
+pub trait GradientDescendable: Backpropable + Predictable {
     fn gradient_descent(&mut self);
 
     fn batch_gradient_descent(&mut self);
+}
 
+pub trait Trainable: Predictable {
     fn train(&mut self);
 }
