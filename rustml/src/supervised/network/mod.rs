@@ -33,6 +33,9 @@ trait Predictable {
 
     fn feedforward(&mut self);
 
+    /// returns the value and index of the output neuron
+    fn get_highest_output(&self) -> (f32, usize);
+
     fn predict(&mut self, inputs: &LayerNeurons);
 }
 
@@ -73,6 +76,12 @@ trait Trainable: GradientDescendable {
         batch: &Vec<(LayerNeurons, LayerNeurons)>,
         batch_size: usize,
     );
+}
+
+trait Classifiable {
+    fn one_hot_encode(&mut self, label: &str) -> Vec<f32>;
+
+    fn get_label(&mut self) -> &str;
 }
 
 trait CSVTrainable: Trainable {

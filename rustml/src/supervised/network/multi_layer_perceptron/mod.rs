@@ -155,6 +155,19 @@ impl Predictable for MultiLayerPerceptron<'_> {
         }
     }
 
+    fn get_highest_output(&self) -> (f32, usize) {
+        let (i, val) = self
+            .activated_layers
+            .last()
+            .unwrap()
+            .iter()
+            .enumerate()
+            .max_by(|(_, a), (_, b)| a.total_cmp(b))
+            .unwrap();
+
+        (*val, i)
+    }
+
     fn predict(&mut self, inputs: &LayerNeurons) {
         self.inputs = inputs.to_vec();
         self.feedforward();
