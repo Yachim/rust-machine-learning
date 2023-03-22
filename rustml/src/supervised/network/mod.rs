@@ -1,3 +1,5 @@
+use std::path::Path;
+
 pub mod multi_layer_perceptron;
 
 /// weights connected from one neuron to all neuron in the previous layer
@@ -43,11 +45,16 @@ trait Trainable {
 }
 
 trait Classifiable {
-    fn one_hot_encode(&mut self, label: &str) -> Vec<f32>;
-
     fn get_label(&mut self) -> &str;
 }
 
 trait CSVTrainable {
-    fn train_from_csv(&mut self, file_path: &str, batch_size: usize);
+    fn train_from_csv(
+        &mut self,
+        file_path: &Path,
+        label_col: usize,
+        data_cols: Vec<usize>,
+        batch_size: usize,
+        iteration_cnt: usize,
+    );
 }

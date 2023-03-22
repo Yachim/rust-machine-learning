@@ -6,7 +6,9 @@ use crate::{
         multi_layer_perceptron::MultiLayerPerceptron, CSVTrainable, Classifiable, LayerNeurons,
         Predictable, Resetable, Shape, Trainable,
     },
+    utils::csv::load_labeled_data_ohc,
 };
+use std::path::Path;
 
 pub struct MultiLayerPerceptronClassification<'a> {
     network: MultiLayerPerceptron<'a>,
@@ -47,15 +49,6 @@ impl Classifiable for MultiLayerPerceptronClassification<'_> {
 
         self.labels[highest_i]
     }
-
-    fn one_hot_encode(&mut self, label: &str) -> Vec<f32> {
-        let i = self.labels.iter().position(|&val| val == label).unwrap();
-        let mut out = vec![0.0; self.labels.len()];
-
-        out[i] = 1.0;
-
-        out
-    }
 }
 
 impl Predictable for MultiLayerPerceptronClassification<'_> {
@@ -81,8 +74,16 @@ impl Trainable for MultiLayerPerceptronClassification<'_> {
 }
 
 impl CSVTrainable for MultiLayerPerceptronClassification<'_> {
-    fn train_from_csv(&mut self, file_path: &str, batch_size: usize) {
-        todo!()
+    fn train_from_csv(
+        &mut self,
+        file_path: &Path,
+        label_col: usize,
+        data_cols: Vec<usize>,
+        batch_size: usize,
+        iteration_cnt: usize,
+    ) {
+        let data = load_labeled_data_ohc(file_path, label_col, data_cols, &self.labels).unwrap();
+        self.train(iteration_cnt, &data, batch_size);
     }
 }
 
@@ -92,21 +93,6 @@ mod tests {
     use crate::functions::{
         activation::SIGMOID, cost::MSE, input_normalizations::NO_NORMALIZATION,
     };
-
-    #[test]
-    fn test_one_hot_encode() {
-        let mut net = MultiLayerPerceptronClassification::new(
-            vec![2, 4],
-            vec![&SIGMOID],
-            &MSE,
-            &NO_NORMALIZATION,
-            vec!["1", "2", "3", "4"],
-        );
-
-        let one_hot_encoded = net.one_hot_encode("2");
-
-        assert_eq!(one_hot_encoded, vec![0.0, 1.0, 0.0, 0.0]);
-    }
 
     #[test]
     fn text_get_label() {
