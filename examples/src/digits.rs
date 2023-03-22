@@ -1,47 +1,38 @@
-use csv::Error;
 use rustml::{
     functions::{
         activation::{RELU, SIGMOID},
         cost::MSE,
         input_normalizations::NORMALIZATION,
     },
-    network::{Network, NetworkConstructorType, NetworkType},
-    utils::csv::{load_labeled_data, load_unlabeled_data},
+    supervised::network::{
+        multi_layer_perceptron::classification::MultiLayerPerceptronClassification, CSVPredictable,
+        CSVTrainable,
+    },
 };
+use std::path::PathBuf;
 
-fn main() -> Result<(), Error> {
-    // https://www.kaggle.com/competitions/digit-recognizer/data
-    let csv_loader = CsvDataLoader::new();
-
-    let labels = vec!["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
-
-    let mut net = Network::new(
+fn main() {
+    let mut net = MultiLayerPerceptronClassification::new(
         vec![784, 16, 16, 10],
-        NetworkConstructorType::Classification(labels),
         vec![&RELU, &RELU, &SIGMOID],
         &MSE,
         &NORMALIZATION,
+        vec!["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"],
     );
-    net.log_costs = true;
-    net.log_epochs = true;
 
-    let training_set = load_labeled_data("examples/data/digits/train.csv", 0, 1..785, NetworkType)?;
+    let training_path = &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("data/digits/train.csv");
 
-    net.train(training_set, 100, 0.001, 10);
+    net.train_from_csv(training_path, 0, &(1..785).collect(), 256, 100);
 
-    let test_data = load_unlabeled_data("examples/data/digits/test.csv", 0..784)?;
+    let predicting_path = &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("data/digits/test.csv");
+    let out_path = &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("data/digits/out.csv");
 
-    let mut test_wtr = csv::Writer::from_path("examples/data/digits/out_relu.csv")?;
-    test_wtr.write_record(&["ImageId", "Label"])?;
-
-    for (i, test_input) in test_data.iter().enumerate() {
-        net.predict(test_input.to_vec());
-        let val = net.get_best_output().0;
-
-        test_wtr.write_record(&[(i + 1).to_string(), val.to_string()])?;
-    }
-
-    test_wtr.flush()?;
-
-    Ok(())
+    net.predict_from_into_csv(
+        predicting_path,
+        out_path,
+        "ImageId",
+        "Label",
+        &(0..784).collect(),
+        1,
+    );
 }

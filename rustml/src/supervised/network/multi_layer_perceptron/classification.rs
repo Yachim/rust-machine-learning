@@ -95,6 +95,7 @@ impl CSVPredictable for MultiLayerPerceptronClassification<'_> {
         id_header: &str,
         label_header: &str,
         data_cols: &Vec<usize>,
+        id_start_at: usize,
     ) {
         let mut predictions: Vec<(String, String)> = vec![];
 
@@ -103,7 +104,8 @@ impl CSVPredictable for MultiLayerPerceptronClassification<'_> {
             self.predict(&inputs);
             let label = self.get_label().to_owned();
 
-            predictions.push((i.to_string(), label));
+            let id = (i + id_start_at).to_string();
+            predictions.push((id, label));
         }
 
         write_data(output_file_path, id_header, label_header, &predictions).unwrap();

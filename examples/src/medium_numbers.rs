@@ -1,4 +1,4 @@
-use rustml::{
+/*use rustml::{
     functions::{activation::SIGMOID, cost::MSE, input_normalizations::NO_NORMALIZATION},
     network::{Network, NetworkConstructorType},
 };
@@ -29,4 +29,7 @@ fn main() {
     let out = out_map.get("res").unwrap();
 
     println!("output: {out}");
+}*/
+fn main() {
+    unimplemented!();
 }

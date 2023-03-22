@@ -1,4 +1,5 @@
 pub mod classification;
+use chrono::offset::Local;
 
 use super::{
     LayerNeurons, LayerWeights, NetworkNeurons, NetworkWeights, NeuronWeights, Predictable,
@@ -211,7 +212,11 @@ impl<'a> MultiLayerPerceptron<'a> {
         batch_size: usize,
     ) {
         for batch_start in (0..batch.len()).step_by(batch_size) {
-            let mini_batch = &batch[batch_start..batch_start + batch_size];
+            let mini_batch = if batch.len() - batch_start >= batch_size {
+                &batch[batch_start..batch_start + batch_size]
+            } else {
+                &batch[batch_start..]
+            };
             let mut avg_dws: NetworkWeights = vec![];
             let mut avg_dbs: NetworkNeurons = vec![];
 
@@ -222,8 +227,9 @@ impl<'a> MultiLayerPerceptron<'a> {
                 self.predict(inputs);
                 let (dws, dbs) = self.backprop(&expected);
 
-                if avg_dws.len() == 0 {
+                if avg_dws.len() == 0 && avg_dbs.len() == 0 {
                     avg_dws = dws;
+                    avg_dbs = dbs;
                 } else {
                     avg_dws = add_3d_vecs(&avg_dws, &dws);
                     avg_dbs = add_2d_vecs(&avg_dbs, &dbs);
@@ -342,9 +348,20 @@ impl Trainable for MultiLayerPerceptron<'_> {
         batch: &Vec<(LayerNeurons, LayerNeurons)>,
         batch_size: usize,
     ) {
-        for _ in 0..iteration_cnt {
+        let time_start = Local::now();
+        println!("beginning training at {time_start}");
+
+        for i in 0..iteration_cnt {
+            let epoch = i + 1;
+            let time_epoch = Local::now();
+
+            println!("beginning training epoch {epoch} out of {iteration_cnt} at {time_epoch}");
+
             self.batch_gradient_descent(batch, batch_size);
         }
+
+        let time_end = Local::now();
+        println!("finishing training at {time_end}");
     }
 }
 

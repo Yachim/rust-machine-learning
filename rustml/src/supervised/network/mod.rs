@@ -28,14 +28,14 @@ trait Resetable {
 }
 
 /// testing/predicting
-trait Predictable {
+pub trait Predictable {
     /// returns the value and index of the output neuron
     fn get_highest_output(&self) -> (f32, usize);
 
     fn predict(&mut self, inputs: &LayerNeurons);
 }
 
-trait Trainable {
+pub trait Trainable {
     fn train(
         &mut self,
         iteration_cnt: usize,
@@ -44,11 +44,11 @@ trait Trainable {
     );
 }
 
-trait Classifiable {
+pub trait Classifiable {
     fn get_label(&self) -> &str;
 }
 
-trait CSVTrainable {
+pub trait CSVTrainable {
     fn train_from_csv(
         &mut self,
         file_path: &Path,
@@ -59,7 +59,7 @@ trait CSVTrainable {
     );
 }
 
-trait CSVPredictable {
+pub trait CSVPredictable {
     /// loads a file with data and writes the predictions into another file
     fn predict_from_into_csv(
         &mut self,
@@ -68,5 +68,6 @@ trait CSVPredictable {
         id_header: &str,
         label_header: &str,
         data_cols: &Vec<usize>,
+        id_start_at: usize,
     );
 }
