@@ -29,86 +29,6 @@ struct MultiLayerPerceptron<'a> {
 }
 
 impl<'a> MultiLayerPerceptron<'a> {
-    fn new(
-        shape: Shape,
-        activation_funcs: Vec<&'a ActivationFunc>,
-        cost_func: &'a CostFunc,
-        normalization_func: &'a NormalizationFunc,
-    ) -> Self {
-        assert_eq!(activation_funcs.len(), shape.len() - 1);
-        let mut net = Self {
-            shape,
-            activation_funcs,
-            cost_func,
-            normalization_func,
-
-            inputs: vec![],
-            normalized_inputs: vec![],
-            weights: vec![],
-            biases: vec![],
-            layers: vec![],
-            activated_layers: vec![],
-        };
-
-        net.reset_params();
-        net
-    }
-}
-
-impl Resetable for MultiLayerPerceptron<'_> {
-    fn reset_params(&mut self) {
-        let shape = &self.shape;
-
-        let mut new_weights: NetworkWeights = vec![];
-        let mut new_biases: NetworkNeurons = vec![];
-        let mut new_layers: NetworkNeurons = vec![];
-        let mut new_activated_layers: NetworkNeurons = vec![];
-
-        let new_inputs = vec![0.0; shape[0]];
-        let new_normalized_inputs = vec![0.0; shape[0]];
-
-        let weights_init_funcs = &self.activation_funcs;
-
-        for (layer_index, &layer_neuron_cnt) in shape.iter().enumerate().skip(1) {
-            let layer: LayerNeurons = vec![0.0; layer_neuron_cnt];
-            new_layers.push(layer);
-
-            let activated_layer: LayerNeurons = vec![0.0; layer_neuron_cnt];
-            new_activated_layers.push(activated_layer);
-
-            let layer_biases: Vec<f32> = vec![0.0; layer_neuron_cnt];
-            new_biases.push(layer_biases);
-
-            let mut layer_weights: LayerWeights = vec![];
-
-            let prev_layer_neuron_cnt = shape[layer_index - 1];
-
-            let layer_weights_init_func = weights_init_funcs[layer_index - 1].init_fn.function;
-
-            for _ in 0..layer_neuron_cnt {
-                let mut neuron_weights: NeuronWeights = vec![];
-
-                for _ in 0..prev_layer_neuron_cnt {
-                    neuron_weights.push(layer_weights_init_func(prev_layer_neuron_cnt));
-                }
-
-                layer_weights.push(neuron_weights);
-            }
-
-            new_weights.push(layer_weights);
-        }
-
-        self.weights = new_weights;
-        self.biases = new_biases;
-        self.layers = new_layers;
-        self.activated_layers = new_activated_layers;
-
-        self.inputs = new_inputs;
-        self.normalized_inputs = new_normalized_inputs;
-    }
-}
-
-impl Predictable for MultiLayerPerceptron<'_> {
     fn normalize_input(&mut self) {
         let normalization_func = self.normalization_func.function;
 
@@ -155,27 +75,14 @@ impl Predictable for MultiLayerPerceptron<'_> {
         }
     }
 
-    fn get_highest_output(&self) -> (f32, usize) {
-        let (i, val) = self
-            .activated_layers
-            .last()
-            .unwrap()
-            .iter()
-            .enumerate()
-            .max_by(|(_, a), (_, b)| a.total_cmp(b))
-            .unwrap();
-
-        (*val, i)
-    }
-
-    fn predict(&mut self, inputs: &LayerNeurons) {
-        self.inputs = inputs.to_vec();
-        self.feedforward();
-    }
-}
-
-impl Backpropable for MultiLayerPerceptron<'_> {
-    /// again, prev as in previous iteration ((i + 1)th layer)
+    /// returns derivatives in order: dC/dw[l], dC/db[l], dC/da[l]
+    ///
+    /// prev_cost_activation_derivatives: dC/da[l + 1]
+    /// not needed only when computing last layer
+    ///
+    /// expected: only needed when computing last_layer
+    ///
+    /// prev as in previous iteration (next) since the iteration should be backwards
     fn backprop_layer(
         &self,
         layer_i: usize,
@@ -274,6 +181,106 @@ impl Backpropable for MultiLayerPerceptron<'_> {
         )
     }
 
+    fn new(
+        shape: Shape,
+        activation_funcs: Vec<&'a ActivationFunc>,
+        cost_func: &'a CostFunc,
+        normalization_func: &'a NormalizationFunc,
+    ) -> Self {
+        assert_eq!(activation_funcs.len(), shape.len() - 1);
+        let mut net = Self {
+            shape,
+            activation_funcs,
+            cost_func,
+            normalization_func,
+
+            inputs: vec![],
+            normalized_inputs: vec![],
+            weights: vec![],
+            biases: vec![],
+            layers: vec![],
+            activated_layers: vec![],
+        };
+
+        net.reset_params();
+        net
+    }
+}
+
+impl Resetable for MultiLayerPerceptron<'_> {
+    fn reset_params(&mut self) {
+        let shape = &self.shape;
+
+        let mut new_weights: NetworkWeights = vec![];
+        let mut new_biases: NetworkNeurons = vec![];
+        let mut new_layers: NetworkNeurons = vec![];
+        let mut new_activated_layers: NetworkNeurons = vec![];
+
+        let new_inputs = vec![0.0; shape[0]];
+        let new_normalized_inputs = vec![0.0; shape[0]];
+
+        let weights_init_funcs = &self.activation_funcs;
+
+        for (layer_index, &layer_neuron_cnt) in shape.iter().enumerate().skip(1) {
+            let layer: LayerNeurons = vec![0.0; layer_neuron_cnt];
+            new_layers.push(layer);
+
+            let activated_layer: LayerNeurons = vec![0.0; layer_neuron_cnt];
+            new_activated_layers.push(activated_layer);
+
+            let layer_biases: Vec<f32> = vec![0.0; layer_neuron_cnt];
+            new_biases.push(layer_biases);
+
+            let mut layer_weights: LayerWeights = vec![];
+
+            let prev_layer_neuron_cnt = shape[layer_index - 1];
+
+            let layer_weights_init_func = weights_init_funcs[layer_index - 1].init_fn.function;
+
+            for _ in 0..layer_neuron_cnt {
+                let mut neuron_weights: NeuronWeights = vec![];
+
+                for _ in 0..prev_layer_neuron_cnt {
+                    neuron_weights.push(layer_weights_init_func(prev_layer_neuron_cnt));
+                }
+
+                layer_weights.push(neuron_weights);
+            }
+
+            new_weights.push(layer_weights);
+        }
+
+        self.weights = new_weights;
+        self.biases = new_biases;
+        self.layers = new_layers;
+        self.activated_layers = new_activated_layers;
+
+        self.inputs = new_inputs;
+        self.normalized_inputs = new_normalized_inputs;
+    }
+}
+
+impl Predictable for MultiLayerPerceptron<'_> {
+    fn get_highest_output(&self) -> (f32, usize) {
+        let (i, val) = self
+            .activated_layers
+            .last()
+            .unwrap()
+            .iter()
+            .enumerate()
+            .max_by(|(_, a), (_, b)| a.total_cmp(b))
+            .unwrap();
+
+        (*val, i)
+    }
+
+    fn predict(&mut self, inputs: &LayerNeurons) {
+        self.inputs = inputs.to_vec();
+        self.feedforward();
+    }
+}
+
+impl Backpropable for MultiLayerPerceptron<'_> {
     fn backprop(&self, expected: &LayerNeurons) -> (NetworkWeights, NetworkNeurons) {
         let (last_layer_dws, last_layer_dbs, last_layer_das) =
             self.backprop_layer(self.layers.len() - 1, None, Some(expected));
@@ -343,6 +350,10 @@ impl Trainable for MultiLayerPerceptron<'_> {
         for _ in 0..iteration_cnt {
             self.batch_gradient_descent(batch, batch_size);
         }
+    }
+
+    fn train_from_csv(&mut self, file_path: &str, batch_size: usize) {
+        todo!();
     }
 }
 
