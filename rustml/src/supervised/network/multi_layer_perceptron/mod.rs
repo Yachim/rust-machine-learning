@@ -1,3 +1,5 @@
+pub mod classification;
+
 use super::{
     Backpropable, GradientDescendable, LayerNeurons, LayerWeights, NetworkNeurons, NetworkWeights,
     NeuronWeights, Predictable, Resetable, Shape, Trainable,
@@ -12,7 +14,7 @@ use crate::{
     },
 };
 
-pub struct MultiLayerPerceptron<'a> {
+struct MultiLayerPerceptron<'a> {
     shape: Shape,
     activation_funcs: Vec<&'a ActivationFunc<'a>>,
     cost_func: &'a CostFunc<'a>,

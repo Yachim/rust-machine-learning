@@ -1,3 +1,3 @@
-pub mod functions;
-pub mod learning;
-pub mod utils;
+mod functions;
+pub mod supervised;
+mod utils;

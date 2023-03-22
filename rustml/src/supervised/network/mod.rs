@@ -21,12 +21,12 @@ type NetworkNeurons = Vec<LayerNeurons>;
 type Shape = Vec<usize>;
 
 /// or initialize
-pub trait Resetable {
+trait Resetable {
     fn reset_params(&mut self);
 }
 
 /// testing/predicting
-pub trait Predictable {
+trait Predictable {
     fn normalize_input(&mut self);
 
     fn feedforward_layer(&mut self, layer_i: usize);
@@ -36,7 +36,7 @@ pub trait Predictable {
     fn predict(&mut self, inputs: &LayerNeurons);
 }
 
-pub trait Backpropable {
+trait Backpropable {
     /// returns derivatives in order: dC/dw[l], dC/db[l], dC/da[l]
     ///
     /// prev_cost_activation_derivatives: dC/da[l + 1]
@@ -56,7 +56,7 @@ pub trait Backpropable {
     fn backprop(&self, expected: &NeuronWeights) -> (NetworkWeights, NetworkNeurons);
 }
 
-pub trait GradientDescendable: Backpropable + Predictable {
+trait GradientDescendable: Backpropable + Predictable {
     fn update_weights_and_biases(&mut self, dws: NetworkWeights, dbs: NetworkNeurons);
 
     fn batch_gradient_descent(
@@ -66,7 +66,7 @@ pub trait GradientDescendable: Backpropable + Predictable {
     );
 }
 
-pub trait Trainable: GradientDescendable {
+trait Trainable: GradientDescendable {
     fn train(
         &mut self,
         iteration_cnt: usize,
@@ -75,6 +75,6 @@ pub trait Trainable: GradientDescendable {
     );
 }
 
-pub trait CSVTrainable: Trainable {
+trait CSVTrainable: Trainable {
     fn train_from_csv(&mut self, file_path: &str, batch_size: usize);
 }
