@@ -45,7 +45,7 @@ trait Trainable {
 }
 
 trait Classifiable {
-    fn get_label(&mut self) -> &str;
+    fn get_label(&self) -> &str;
 }
 
 trait CSVTrainable {
@@ -53,8 +53,20 @@ trait CSVTrainable {
         &mut self,
         file_path: &Path,
         label_col: usize,
-        data_cols: Vec<usize>,
+        data_cols: &Vec<usize>,
         batch_size: usize,
         iteration_cnt: usize,
+    );
+}
+
+trait CSVPredictable {
+    /// loads a file with data and writes the predictions into another file
+    fn predict_from_into_csv(
+        &mut self,
+        data_file_path: &Path,
+        output_file_path: &Path,
+        id_header: &str,
+        label_header: &str,
+        data_cols: &Vec<usize>,
     );
 }

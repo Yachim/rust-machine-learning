@@ -3,10 +3,10 @@ use crate::{
         activation::ActivationFunc, cost::CostFunc, input_normalizations::NormalizationFunc,
     },
     supervised::network::{
-        multi_layer_perceptron::MultiLayerPerceptron, CSVTrainable, Classifiable, LayerNeurons,
-        Predictable, Resetable, Shape, Trainable,
+        multi_layer_perceptron::MultiLayerPerceptron, CSVPredictable, CSVTrainable, Classifiable,
+        LayerNeurons, Predictable, Resetable, Shape, Trainable,
     },
-    utils::csv::load_labeled_data_ohc,
+    utils::csv::{load_labeled_data_ohc, load_unlabeled_data, write_data},
 };
 use std::path::Path;
 
@@ -44,7 +44,7 @@ impl Resetable for MultiLayerPerceptronClassification<'_> {
 }
 
 impl Classifiable for MultiLayerPerceptronClassification<'_> {
-    fn get_label(&mut self) -> &str {
+    fn get_label(&self) -> &str {
         let highest_i = self.network.get_highest_output().1;
 
         self.labels[highest_i]
@@ -78,12 +78,35 @@ impl CSVTrainable for MultiLayerPerceptronClassification<'_> {
         &mut self,
         file_path: &Path,
         label_col: usize,
-        data_cols: Vec<usize>,
+        data_cols: &Vec<usize>,
         batch_size: usize,
         iteration_cnt: usize,
     ) {
         let data = load_labeled_data_ohc(file_path, label_col, data_cols, &self.labels).unwrap();
         self.train(iteration_cnt, &data, batch_size);
+    }
+}
+
+impl CSVPredictable for MultiLayerPerceptronClassification<'_> {
+    fn predict_from_into_csv(
+        &mut self,
+        data_file_path: &Path,
+        output_file_path: &Path,
+        id_header: &str,
+        label_header: &str,
+        data_cols: &Vec<usize>,
+    ) {
+        let mut predictions: Vec<(String, String)> = vec![];
+
+        let data = load_unlabeled_data(data_file_path, data_cols).unwrap();
+        for (i, inputs) in data.iter().enumerate() {
+            self.predict(&inputs);
+            let label = self.get_label().to_owned();
+
+            predictions.push((i.to_string(), label));
+        }
+
+        write_data(output_file_path, id_header, label_header, &predictions).unwrap();
     }
 }
 
