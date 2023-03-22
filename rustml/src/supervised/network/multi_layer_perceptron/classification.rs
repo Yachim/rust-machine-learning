@@ -1,13 +1,19 @@
+// TODO: fix usage of String vs &str
+
 use crate::{
     functions::{
         activation::ActivationFunc, cost::CostFunc, input_normalizations::NormalizationFunc,
     },
     supervised::network::{
-        multi_layer_perceptron::MultiLayerPerceptron, CSVPredictable, CSVTrainable, Classifiable,
-        LayerNeurons, Predictable, Resetable, Shape, Trainable,
+        multi_layer_perceptron::MultiLayerPerceptron, CSVPredictable, CSVTestable, CSVTrainable,
+        Classifiable, LayerNeurons, Predictable, Resetable, Shape, Testable, Trainable,
     },
-    utils::csv::{load_labeled_data_ohc, load_unlabeled_data, write_data},
+    utils::{
+        csv::{load_labeled_data, load_labeled_data_ohc, load_unlabeled_data, write_data},
+        misc::one_hot_encode,
+    },
 };
+use rand::{seq::SliceRandom, thread_rng};
 use std::path::Path;
 
 pub struct MultiLayerPerceptronClassification<'a> {
@@ -68,8 +74,27 @@ impl Trainable for MultiLayerPerceptronClassification<'_> {
         iteration_cnt: usize,
         batch: &Vec<(LayerNeurons, LayerNeurons)>,
         batch_size: usize,
+        learning_rate: f32,
     ) {
-        self.network.train(iteration_cnt, batch, batch_size);
+        self.network
+            .train(iteration_cnt, batch, batch_size, learning_rate);
+    }
+}
+
+impl Testable for MultiLayerPerceptronClassification<'_> {
+    fn test(&mut self, data: &Vec<(LayerNeurons, &str)>) -> f32 {
+        let total_cnt = data.len() as f32;
+        let mut total_correct: f32 = 0.0;
+
+        for (inputs, label) in data {
+            self.predict(&inputs);
+
+            if self.get_label() == *label {
+                total_correct += 1.0;
+            }
+        }
+
+        total_correct / total_cnt
     }
 }
 
@@ -81,9 +106,10 @@ impl CSVTrainable for MultiLayerPerceptronClassification<'_> {
         data_cols: &Vec<usize>,
         batch_size: usize,
         iteration_cnt: usize,
+        learning_rate: f32,
     ) {
         let data = load_labeled_data_ohc(file_path, label_col, data_cols, &self.labels).unwrap();
-        self.train(iteration_cnt, &data, batch_size);
+        self.train(iteration_cnt, &data, batch_size, learning_rate);
     }
 }
 
@@ -109,6 +135,52 @@ impl CSVPredictable for MultiLayerPerceptronClassification<'_> {
         }
 
         write_data(output_file_path, id_header, label_header, &predictions).unwrap();
+    }
+}
+
+impl CSVTestable for MultiLayerPerceptronClassification<'_> {
+    fn train_and_test_from_csv(
+        &mut self,
+        file_path: &Path,
+        label_col: usize,
+        data_cols: &Vec<usize>,
+        training_part: f32,
+        batch_size: usize,
+        iteration_cnt: usize,
+        shuffle: bool,
+        learning_rate: f32,
+    ) -> f32 {
+        let mut full_data = load_labeled_data(file_path, label_col, data_cols).unwrap();
+        if shuffle {
+            full_data.shuffle(&mut thread_rng());
+        }
+
+        let training_len = full_data.len() * training_part as usize;
+
+        let training_data: Vec<(LayerNeurons, LayerNeurons)> = full_data[0..training_len]
+            .iter()
+            .map(|(inputs, label)| (inputs.to_vec(), one_hot_encode(&self.labels, label)))
+            .collect();
+        let testing_data: Vec<(LayerNeurons, &str)> = full_data[training_len..]
+            .iter()
+            .map(|(inputs, label)| (inputs.to_vec(), label.as_str()))
+            .collect();
+
+        self.train(iteration_cnt, &training_data, batch_size, learning_rate);
+
+        self.test(&testing_data)
+    }
+
+    /// TODO: not tested
+    fn test_from_csv(&mut self, file_path: &Path, label_col: usize, data_cols: &Vec<usize>) -> f32 {
+        let full_data = load_labeled_data(file_path, label_col, data_cols).unwrap();
+
+        let data: Vec<(LayerNeurons, &str)> = full_data
+            .iter()
+            .map(|(inputs, label)| (inputs.to_vec(), label.as_str()))
+            .collect();
+
+        self.test(&data)
     }
 }
 

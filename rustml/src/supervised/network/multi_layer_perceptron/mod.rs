@@ -11,7 +11,7 @@ use crate::{
     },
     utils::math::{
         add_2d_vecs, add_3d_vecs, divide_vector_float_2d, divide_vector_float_3d, dot_product,
-        subtract_2d_vecs, subtract_3d_vecs,
+        multiply_vector_float_2d, multiply_vector_float_3d, subtract_2d_vecs, subtract_3d_vecs,
     },
 };
 
@@ -201,15 +201,25 @@ impl<'a> MultiLayerPerceptron<'a> {
         (dws, dbs)
     }
 
-    fn update_weights_and_biases(&mut self, dws: NetworkWeights, dbs: NetworkNeurons) {
-        self.weights = subtract_3d_vecs(&self.weights, &dws);
-        self.biases = subtract_2d_vecs(&self.biases, &dbs);
+    fn update_weights_and_biases(
+        &mut self,
+        dws: NetworkWeights,
+        dbs: NetworkNeurons,
+        learning_rate: f32,
+    ) {
+        let w_diff = subtract_3d_vecs(&self.weights, &dws);
+        let b_diff = subtract_2d_vecs(&self.biases, &dbs);
+
+        self.weights = multiply_vector_float_3d(&w_diff, learning_rate);
+        self.biases = multiply_vector_float_2d(&b_diff, learning_rate);
     }
 
+    // FIXME: shuffle?
     fn batch_gradient_descent(
         &mut self,
         batch: &Vec<(LayerNeurons, LayerNeurons)>,
         batch_size: usize,
+        learning_rate: f32,
     ) {
         for batch_start in (0..batch.len()).step_by(batch_size) {
             let mini_batch = if batch.len() - batch_start >= batch_size {
@@ -238,7 +248,7 @@ impl<'a> MultiLayerPerceptron<'a> {
 
             avg_dws = divide_vector_float_3d(&avg_dws, mini_batch.len() as f32);
             avg_dbs = divide_vector_float_2d(&avg_dbs, mini_batch.len() as f32);
-            self.update_weights_and_biases(avg_dws, avg_dbs);
+            self.update_weights_and_biases(avg_dws, avg_dbs, learning_rate);
         }
     }
 
@@ -347,6 +357,7 @@ impl Trainable for MultiLayerPerceptron<'_> {
         iteration_cnt: usize,
         batch: &Vec<(LayerNeurons, LayerNeurons)>,
         batch_size: usize,
+        learning_rate: f32,
     ) {
         let time_start = Local::now();
         println!("beginning training at {time_start}");
@@ -357,7 +368,7 @@ impl Trainable for MultiLayerPerceptron<'_> {
 
             println!("beginning training epoch {epoch} out of {iteration_cnt} at {time_epoch}");
 
-            self.batch_gradient_descent(batch, batch_size);
+            self.batch_gradient_descent(batch, batch_size, learning_rate);
         }
 
         let time_end = Local::now();

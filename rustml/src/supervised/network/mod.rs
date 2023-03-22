@@ -41,7 +41,13 @@ pub trait Trainable {
         iteration_cnt: usize,
         batch: &Vec<(LayerNeurons, LayerNeurons)>,
         batch_size: usize,
+        learning_rate: f32,
     );
+}
+
+pub trait Testable {
+    /// returns accuracy as number between 0 and 1
+    fn test(&mut self, data: &Vec<(LayerNeurons, &str)>) -> f32;
 }
 
 pub trait Classifiable {
@@ -56,7 +62,28 @@ pub trait CSVTrainable {
         data_cols: &Vec<usize>,
         batch_size: usize,
         iteration_cnt: usize,
+        learning_rate: f32,
     );
+}
+
+pub trait CSVTestable {
+    /// trains from a csv and then tests from the same data splitting between training and testing
+    /// data
+    /// training_part: number between 0 and 1 specifying how much of the dataset is training
+    fn train_and_test_from_csv(
+        &mut self,
+        file_path: &Path,
+        label_col: usize,
+        data_cols: &Vec<usize>,
+        training_part: f32,
+        batch_size: usize,
+        iteration_cnt: usize,
+        shuffle: bool,
+        learning_rate: f32,
+    ) -> f32;
+
+    /// loads labeled data and returns accuracy
+    fn test_from_csv(&mut self, file_path: &Path, label_col: usize, data_cols: &Vec<usize>) -> f32;
 }
 
 pub trait CSVPredictable {

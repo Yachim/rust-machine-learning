@@ -11,6 +11,7 @@ use rustml::{
 };
 use std::path::PathBuf;
 
+// https://www.kaggle.com/competitions/digit-recognizer
 fn main() {
     let mut net = MultiLayerPerceptronClassification::new(
         vec![784, 16, 16, 10],
@@ -22,7 +23,7 @@ fn main() {
 
     let training_path = &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("data/digits/train.csv");
 
-    net.train_from_csv(training_path, 0, &(1..785).collect(), 256, 100);
+    net.train_from_csv(training_path, 0, &(1..785).collect(), 256, 100, 0.001);
 
     let predicting_path = &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("data/digits/test.csv");
     let out_path = &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("data/digits/out.csv");

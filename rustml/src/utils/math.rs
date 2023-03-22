@@ -6,19 +6,36 @@ pub fn _hadamard_product(v1: &Vec<f32>, v2: &Vec<f32>) -> Vec<f32> {
     zip(v1, v2).map(|x| x.0 * x.1).collect()
 }
 
-/// divide each vector by float
+/// multiply each element by float
+pub fn multiply_vector_float(v: &Vec<f32>, factor: f32) -> Vec<f32> {
+    v.iter().map(|x| x * factor).collect()
+}
+
+/// multiply each element by float
+pub fn multiply_vector_float_2d(v: &Vec<Vec<f32>>, factor: f32) -> Vec<Vec<f32>> {
+    v.iter().map(|x| multiply_vector_float(x, factor)).collect()
+}
+
+/// multiply each element by float
+pub fn multiply_vector_float_3d(v: &Vec<Vec<Vec<f32>>>, factor: f32) -> Vec<Vec<Vec<f32>>> {
+    v.iter()
+        .map(|x| multiply_vector_float_2d(x, factor))
+        .collect()
+}
+
+/// divide each element by float
 pub fn divide_vector_float(v: &Vec<f32>, denominator: f32) -> Vec<f32> {
     v.iter().map(|x| x / denominator).collect()
 }
 
-/// divide each vector by float
+/// divide each element by float
 pub fn divide_vector_float_2d(v: &Vec<Vec<f32>>, denominator: f32) -> Vec<Vec<f32>> {
     v.iter()
         .map(|x| divide_vector_float(x, denominator))
         .collect()
 }
 
-/// divide each vector by float
+/// divide each element by float
 pub fn divide_vector_float_3d(v: &Vec<Vec<Vec<f32>>>, denominator: f32) -> Vec<Vec<Vec<f32>>> {
     v.iter()
         .map(|x| divide_vector_float_2d(x, denominator))

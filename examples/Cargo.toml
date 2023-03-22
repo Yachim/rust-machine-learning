@@ -15,3 +15,7 @@ path = "src/digits.rs"
 [[example]]
 name = "medium_numbers"
 path = "src/medium_numbers.rs"
+
+[[example]]
+name = "iris"
+path = "src/iris.rs"
