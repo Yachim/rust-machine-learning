@@ -6,7 +6,10 @@ use crate::{
     functions::{
         activation::ActivationFunc, cost::CostFunc, input_normalizations::NormalizationFunc,
     },
-    utils::math::{add_2d_vecs, add_3d_vecs, dot_product, subtract_2d_vecs, subtract_3d_vecs},
+    utils::math::{
+        add_2d_vecs, add_3d_vecs, divide_vector_float_2d, divide_vector_float_3d, dot_product,
+        subtract_2d_vecs, subtract_3d_vecs,
+    },
 };
 
 pub struct MultiLayerPerceptron<'a> {
@@ -308,6 +311,8 @@ impl GradientDescendable for MultiLayerPerceptron<'_> {
                 }
             }
 
+            avg_dws = divide_vector_float_3d(&avg_dws, mini_batch.len() as f32);
+            avg_dbs = divide_vector_float_2d(&avg_dbs, mini_batch.len() as f32);
             self.update_weights_and_biases(avg_dws, avg_dbs);
         }
     }
