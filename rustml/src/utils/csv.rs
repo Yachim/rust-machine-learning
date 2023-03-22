@@ -1,30 +1,25 @@
-/*use crate::network::{NetworkType, TrainingData};
 use csv::{Error, Reader};
 use std::iter::zip;
+use std::path::Path;
+
+type TrainingData<'a> = Vec<(Vec<f32>, String)>;
 
 /// data for training and testing
 pub fn load_labeled_data<'a>(
-    file_path: &str,
+    file_path: &Path,
     label_col: usize,
     data_cols: Vec<usize>,
-    network_type: NetworkType,
 ) -> Result<TrainingData, Error> {
     let mut rdr = Reader::from_path(file_path)?;
 
     let mut inputs: Vec<Vec<f32>> = vec![];
-    let mut expected_floats: Vec<f32> = vec![];
-    let mut expected_strs: Vec<String> = vec![];
+    let mut expected: Vec<String> = vec![];
 
     for result in rdr.records() {
         let record = result?;
 
-        let expected = record[label_col].to_owned();
-        match network_type {
-            NetworkType::Regression { .. } => {
-                expected_floats.push(expected.parse::<f32>().expect("label is not a number"))
-            }
-            NetworkType::Classification { .. } => expected_strs.push(expected),
-        }
+        let expected_for_sample = record[label_col].to_owned();
+        expected.push(expected_for_sample);
 
         let inputs_for_sample: Vec<f32> = data_cols
             .iter()
@@ -37,18 +32,14 @@ pub fn load_labeled_data<'a>(
         inputs.push(inputs_for_sample);
     }
 
-    match network_type {
-        NetworkType::Regression { .. } => Ok(TrainingData::Regression(
-            zip(inputs, expected_floats).collect(),
-        )),
-        NetworkType::Classification { .. } => Ok(TrainingData::Classification(
-            zip(inputs, expected_strs).collect(),
-        )),
-    }
+    Ok(zip(inputs, expected).collect())
 }
 
 /// data for predicting
-pub fn load_unlabeled_data(file_path: &str, data_cols: Vec<usize>) -> Result<Vec<Vec<f32>>, Error> {
+pub fn load_unlabeled_data(
+    file_path: &Path,
+    data_cols: Vec<usize>,
+) -> Result<Vec<Vec<f32>>, Error> {
     let mut rdr = Reader::from_path(file_path)?;
 
     let mut inputs: Vec<Vec<f32>> = vec![];
@@ -68,4 +59,38 @@ pub fn load_unlabeled_data(file_path: &str, data_cols: Vec<usize>) -> Result<Vec
     }
 
     Ok(inputs)
-}*/
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{load_labeled_data, load_unlabeled_data};
+    use std::path::PathBuf;
+
+    #[test]
+    fn test_labeled_data() {
+        let path =
+            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src/utils/csv_testing/file1.csv");
+
+        let res = load_labeled_data(&path, 0, vec![1, 3, 4]).unwrap();
+        assert_eq!(
+            res,
+            vec![
+                (vec![2.0, 4.0, 5.0], String::from("1")),
+                (vec![3.0, 0.0, 2.0], String::from("3")),
+                (vec![0.0, 4.0, 2.0], String::from("1")),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_unlabeled_data() {
+        let path =
+            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src/utils/csv_testing/file1.csv");
+
+        let res = load_unlabeled_data(&path, vec![3, 4]).unwrap();
+        assert_eq!(
+            res,
+            vec![(vec![4.0, 5.0]), (vec![0.0, 2.0]), (vec![4.0, 2.0]),]
+        );
+    }
+}
