@@ -1,6 +1,6 @@
 use std::iter::zip;
 
-pub fn _hadamard_product<'a>(v1: &Vec<f32>, v2: &Vec<f32>) -> Vec<f32> {
+pub fn _hadamard_product(v1: &Vec<f32>, v2: &Vec<f32>) -> Vec<f32> {
     assert_eq!(v1.len(), v2.len());
 
     zip(v1, v2).map(|x| x.0 * x.1).collect()
@@ -12,16 +12,40 @@ pub fn dot_product(v1: &Vec<f32>, v2: &Vec<f32>) -> f32 {
     zip(v1, v2).map(|x| x.0 * x.1).sum::<f32>()
 }
 
-pub fn _add_vecs<'a>(v1: &Vec<f32>, v2: &Vec<f32>) -> Vec<f32> {
+pub fn add_vecs(v1: &Vec<f32>, v2: &Vec<f32>) -> Vec<f32> {
     assert_eq!(v1.len(), v2.len());
 
-    zip(v1, v2).map(|x| x.0 + x.1).collect()
+    zip(v1, v2).map(|(a, b)| a + b).collect()
 }
 
-pub fn _subtract_vecs<'a>(v1: &Vec<f32>, v2: &Vec<f32>) -> Vec<f32> {
+pub fn add_2d_vecs(v1: &Vec<Vec<f32>>, v2: &Vec<Vec<f32>>) -> Vec<Vec<f32>> {
     assert_eq!(v1.len(), v2.len());
 
-    zip(v1, v2).map(|x| x.0 - x.1).collect()
+    zip(v1, v2).map(|(a, b)| add_vecs(a, b)).collect()
+}
+
+pub fn add_3d_vecs(v1: &Vec<Vec<Vec<f32>>>, v2: &Vec<Vec<Vec<f32>>>) -> Vec<Vec<Vec<f32>>> {
+    assert_eq!(v1.len(), v2.len());
+
+    zip(v1, v2).map(|(a, b)| add_2d_vecs(a, b)).collect()
+}
+
+pub fn subtract_vecs(v1: &Vec<f32>, v2: &Vec<f32>) -> Vec<f32> {
+    assert_eq!(v1.len(), v2.len());
+
+    zip(v1, v2).map(|(a, b)| a - b).collect()
+}
+
+pub fn subtract_2d_vecs(v1: &Vec<Vec<f32>>, v2: &Vec<Vec<f32>>) -> Vec<Vec<f32>> {
+    assert_eq!(v1.len(), v2.len());
+
+    zip(v1, v2).map(|(a, b)| subtract_vecs(a, b)).collect()
+}
+
+pub fn subtract_3d_vecs(v1: &Vec<Vec<Vec<f32>>>, v2: &Vec<Vec<Vec<f32>>>) -> Vec<Vec<Vec<f32>>> {
+    assert_eq!(v1.len(), v2.len());
+
+    zip(v1, v2).map(|(a, b)| subtract_2d_vecs(a, b)).collect()
 }
 
 #[cfg(test)]
@@ -45,10 +69,52 @@ mod tests {
         let v1 = vec![5.0, 6.0];
         let v2 = vec![2.0, 4.0];
 
-        let sum = _add_vecs(&v1, &v2);
-        let diff = _subtract_vecs(&v1, &v2);
+        let sum = add_vecs(&v1, &v2);
+        let diff = subtract_vecs(&v1, &v2);
 
         assert_eq!(sum, vec![7.0, 10.0]);
         assert_eq!(diff, vec![3.0, 2.0]);
+    }
+
+    #[test]
+    fn test_add_subtract_2d() {
+        let v1 = vec![vec![1.0, 2.0], vec![3.0, 3.0]];
+        let v2 = vec![vec![2.0, 1.0], vec![3.0, 1.0]];
+
+        let sum = add_2d_vecs(&v1, &v2);
+        let diff = subtract_2d_vecs(&v1, &v2);
+
+        assert_eq!(sum, vec![vec![3.0, 3.0], vec![6.0, 4.0]]);
+        assert_eq!(diff, vec![vec![-1.0, 1.0], vec![0.0, 2.0]])
+    }
+
+    #[test]
+    fn test_add_subtract_3d() {
+        let v1 = vec![
+            vec![vec![3.0, 2.0], vec![1.0, 4.0]],
+            vec![vec![1.0, 4.0], vec![3.0, 2.0]],
+        ];
+        let v2 = vec![
+            vec![vec![1.0, 1.0], vec![2.0, 3.0]],
+            vec![vec![2.0, 3.0], vec![2.0, 1.0]],
+        ];
+
+        let sum = add_3d_vecs(&v1, &v2);
+        let diff = subtract_3d_vecs(&v1, &v2);
+
+        assert_eq!(
+            sum,
+            vec![
+                vec![vec![4.0, 3.0], vec![3.0, 7.0]],
+                vec![vec![3.0, 7.0], vec![5.0, 3.0]]
+            ]
+        );
+        assert_eq!(
+            diff,
+            vec![
+                vec![vec![2.0, 1.0], vec![-1.0, 1.0]],
+                vec![vec![-1.0, 1.0], vec![1.0, 1.0]]
+            ]
+        )
     }
 }
