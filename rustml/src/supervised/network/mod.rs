@@ -33,34 +33,21 @@ trait Predictable {
     fn predict(&mut self, inputs: &LayerNeurons);
 }
 
-trait Backpropable {
-    /// returns derivatives in order: dC/dw, dC/db
-    fn backprop(&self, expected: &NeuronWeights) -> (NetworkWeights, NetworkNeurons);
-}
-
-trait GradientDescendable: Backpropable + Predictable {
-    fn update_weights_and_biases(&mut self, dws: NetworkWeights, dbs: NetworkNeurons);
-
-    fn batch_gradient_descent(
-        &mut self,
-        batch: &Vec<(LayerNeurons, LayerNeurons)>,
-        batch_size: usize,
-    );
-}
-
-trait Trainable: GradientDescendable {
+trait Trainable {
     fn train(
         &mut self,
         iteration_cnt: usize,
         batch: &Vec<(LayerNeurons, LayerNeurons)>,
         batch_size: usize,
     );
-
-    fn train_from_csv(&mut self, file_path: &str, batch_size: usize);
 }
 
 trait Classifiable {
     fn one_hot_encode(&mut self, label: &str) -> Vec<f32>;
 
     fn get_label(&mut self) -> &str;
+}
+
+trait CSVTrainable {
+    fn train_from_csv(&mut self, file_path: &str, batch_size: usize);
 }

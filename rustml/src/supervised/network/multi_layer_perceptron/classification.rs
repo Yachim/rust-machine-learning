@@ -3,7 +3,8 @@ use crate::{
         activation::ActivationFunc, cost::CostFunc, input_normalizations::NormalizationFunc,
     },
     supervised::network::{
-        multi_layer_perceptron::MultiLayerPerceptron, Classifiable, Predictable, Shape,
+        multi_layer_perceptron::MultiLayerPerceptron, CSVTrainable, Classifiable, LayerNeurons,
+        Predictable, Resetable, Shape, Trainable,
     },
 };
 
@@ -13,7 +14,7 @@ pub struct MultiLayerPerceptronClassification<'a> {
 }
 
 impl<'a> MultiLayerPerceptronClassification<'a> {
-    fn new(
+    pub fn new(
         shape: Shape,
         activation_funcs: Vec<&'a ActivationFunc>,
         cost_func: &'a CostFunc,
@@ -34,6 +35,12 @@ impl<'a> MultiLayerPerceptronClassification<'a> {
     }
 }
 
+impl Resetable for MultiLayerPerceptronClassification<'_> {
+    fn reset_params(&mut self) {
+        self.network.reset_params();
+    }
+}
+
 impl Classifiable for MultiLayerPerceptronClassification<'_> {
     fn get_label(&mut self) -> &str {
         let highest_i = self.network.get_highest_output().1;
@@ -48,6 +55,34 @@ impl Classifiable for MultiLayerPerceptronClassification<'_> {
         out[i] = 1.0;
 
         out
+    }
+}
+
+impl Predictable for MultiLayerPerceptronClassification<'_> {
+    fn predict(&mut self, inputs: &LayerNeurons) {
+        self.network.predict(inputs);
+    }
+
+    fn get_highest_output(&self) -> (f32, usize) {
+        self.network.get_highest_output()
+    }
+}
+
+impl Trainable for MultiLayerPerceptronClassification<'_> {
+    /// requires &Vec<(inputs, expected)> where expected is a vector of floats
+    fn train(
+        &mut self,
+        iteration_cnt: usize,
+        batch: &Vec<(LayerNeurons, LayerNeurons)>,
+        batch_size: usize,
+    ) {
+        self.network.train(iteration_cnt, batch, batch_size);
+    }
+}
+
+impl CSVTrainable for MultiLayerPerceptronClassification<'_> {
+    fn train_from_csv(&mut self, file_path: &str, batch_size: usize) {
+        todo!()
     }
 }
 

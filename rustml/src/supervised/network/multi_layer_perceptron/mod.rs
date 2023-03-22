@@ -1,8 +1,8 @@
 pub mod classification;
 
 use super::{
-    Backpropable, GradientDescendable, LayerNeurons, LayerWeights, NetworkNeurons, NetworkWeights,
-    NeuronWeights, Predictable, Resetable, Shape, Trainable,
+    LayerNeurons, LayerWeights, NetworkNeurons, NetworkWeights, NeuronWeights, Predictable,
+    Resetable, Shape, Trainable,
 };
 use crate::{
     functions::{
@@ -180,6 +180,61 @@ impl<'a> MultiLayerPerceptron<'a> {
             cost_activation_derivatives,
         )
     }
+    fn backprop(&self, expected: &LayerNeurons) -> (NetworkWeights, NetworkNeurons) {
+        let (last_layer_dws, last_layer_dbs, last_layer_das) =
+            self.backprop_layer(self.layers.len() - 1, None, Some(expected));
+
+        let mut dws: NetworkWeights = vec![last_layer_dws];
+        let mut dbs: NetworkNeurons = vec![last_layer_dbs];
+        let mut layer_das: LayerNeurons = last_layer_das;
+
+        for layer_i in (0..self.layers.len() - 1).rev() {
+            let (curr_layer_dws, curr_layer_dbs, curr_layer_das) =
+                self.backprop_layer(layer_i, Some(&layer_das), None);
+
+            dws.insert(0, curr_layer_dws);
+            dbs.insert(0, curr_layer_dbs);
+            layer_das = curr_layer_das;
+        }
+
+        (dws, dbs)
+    }
+
+    fn update_weights_and_biases(&mut self, dws: NetworkWeights, dbs: NetworkNeurons) {
+        self.weights = subtract_3d_vecs(&self.weights, &dws);
+        self.biases = subtract_2d_vecs(&self.biases, &dbs);
+    }
+
+    fn batch_gradient_descent(
+        &mut self,
+        batch: &Vec<(LayerNeurons, LayerNeurons)>,
+        batch_size: usize,
+    ) {
+        for batch_start in (0..batch.len()).step_by(batch_size) {
+            let mini_batch = &batch[batch_start..batch_start + batch_size];
+            let mut avg_dws: NetworkWeights = vec![];
+            let mut avg_dbs: NetworkNeurons = vec![];
+
+            for data in mini_batch {
+                let inputs = &data.0;
+                let expected = &data.1;
+
+                self.predict(inputs);
+                let (dws, dbs) = self.backprop(&expected);
+
+                if avg_dws.len() == 0 {
+                    avg_dws = dws;
+                } else {
+                    avg_dws = add_3d_vecs(&avg_dws, &dws);
+                    avg_dbs = add_2d_vecs(&avg_dbs, &dbs);
+                }
+            }
+
+            avg_dws = divide_vector_float_3d(&avg_dws, mini_batch.len() as f32);
+            avg_dbs = divide_vector_float_2d(&avg_dbs, mini_batch.len() as f32);
+            self.update_weights_and_biases(avg_dws, avg_dbs);
+        }
+    }
 
     fn new(
         shape: Shape,
@@ -280,66 +335,6 @@ impl Predictable for MultiLayerPerceptron<'_> {
     }
 }
 
-impl Backpropable for MultiLayerPerceptron<'_> {
-    fn backprop(&self, expected: &LayerNeurons) -> (NetworkWeights, NetworkNeurons) {
-        let (last_layer_dws, last_layer_dbs, last_layer_das) =
-            self.backprop_layer(self.layers.len() - 1, None, Some(expected));
-
-        let mut dws: NetworkWeights = vec![last_layer_dws];
-        let mut dbs: NetworkNeurons = vec![last_layer_dbs];
-        let mut layer_das: LayerNeurons = last_layer_das;
-
-        for layer_i in (0..self.layers.len() - 1).rev() {
-            let (curr_layer_dws, curr_layer_dbs, curr_layer_das) =
-                self.backprop_layer(layer_i, Some(&layer_das), None);
-
-            dws.insert(0, curr_layer_dws);
-            dbs.insert(0, curr_layer_dbs);
-            layer_das = curr_layer_das;
-        }
-
-        (dws, dbs)
-    }
-}
-
-impl GradientDescendable for MultiLayerPerceptron<'_> {
-    fn update_weights_and_biases(&mut self, dws: NetworkWeights, dbs: NetworkNeurons) {
-        self.weights = subtract_3d_vecs(&self.weights, &dws);
-        self.biases = subtract_2d_vecs(&self.biases, &dbs);
-    }
-
-    fn batch_gradient_descent(
-        &mut self,
-        batch: &Vec<(LayerNeurons, LayerNeurons)>,
-        batch_size: usize,
-    ) {
-        for batch_start in (0..batch.len()).step_by(batch_size) {
-            let mini_batch = &batch[batch_start..batch_start + batch_size];
-            let mut avg_dws: NetworkWeights = vec![];
-            let mut avg_dbs: NetworkNeurons = vec![];
-
-            for data in mini_batch {
-                let inputs = &data.0;
-                let expected = &data.1;
-
-                self.predict(inputs);
-                let (dws, dbs) = self.backprop(&expected);
-
-                if avg_dws.len() == 0 {
-                    avg_dws = dws;
-                } else {
-                    avg_dws = add_3d_vecs(&avg_dws, &dws);
-                    avg_dbs = add_2d_vecs(&avg_dbs, &dbs);
-                }
-            }
-
-            avg_dws = divide_vector_float_3d(&avg_dws, mini_batch.len() as f32);
-            avg_dbs = divide_vector_float_2d(&avg_dbs, mini_batch.len() as f32);
-            self.update_weights_and_biases(avg_dws, avg_dbs);
-        }
-    }
-}
-
 impl Trainable for MultiLayerPerceptron<'_> {
     fn train(
         &mut self,
@@ -351,15 +346,11 @@ impl Trainable for MultiLayerPerceptron<'_> {
             self.batch_gradient_descent(batch, batch_size);
         }
     }
-
-    fn train_from_csv(&mut self, file_path: &str, batch_size: usize) {
-        todo!();
-    }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{Backpropable, MultiLayerPerceptron, Predictable};
+    use super::{MultiLayerPerceptron, Predictable};
     use crate::functions::{
         activation::{RELU, SIGMOID},
         cost::MSE,
