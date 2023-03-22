@@ -66,6 +66,15 @@ pub trait GradientDescendable: Backpropable + Predictable {
     );
 }
 
-pub trait Trainable: Predictable {
-    fn train(&mut self);
+pub trait Trainable: GradientDescendable {
+    fn train(
+        &mut self,
+        iteration_cnt: usize,
+        batch: &Vec<(LayerNeurons, LayerNeurons)>,
+        batch_size: usize,
+    );
+}
+
+pub trait CSVTrainable: Trainable {
+    fn train_from_csv(&mut self, file_path: &str, batch_size: usize);
 }

@@ -1,6 +1,6 @@
 use super::{
     Backpropable, GradientDescendable, LayerNeurons, LayerWeights, NetworkNeurons, NetworkWeights,
-    NeuronWeights, Predictable, Resetable, Shape,
+    NeuronWeights, Predictable, Resetable, Shape, Trainable,
 };
 use crate::{
     functions::{
@@ -314,6 +314,19 @@ impl GradientDescendable for MultiLayerPerceptron<'_> {
             avg_dws = divide_vector_float_3d(&avg_dws, mini_batch.len() as f32);
             avg_dbs = divide_vector_float_2d(&avg_dbs, mini_batch.len() as f32);
             self.update_weights_and_biases(avg_dws, avg_dbs);
+        }
+    }
+}
+
+impl Trainable for MultiLayerPerceptron<'_> {
+    fn train(
+        &mut self,
+        iteration_cnt: usize,
+        batch: &Vec<(LayerNeurons, LayerNeurons)>,
+        batch_size: usize,
+    ) {
+        for _ in 0..iteration_cnt {
+            self.batch_gradient_descent(batch, batch_size);
         }
     }
 }
