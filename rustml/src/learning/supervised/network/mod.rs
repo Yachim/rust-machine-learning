@@ -32,6 +32,8 @@ pub trait Predictable {
     fn feedforward_layer(&mut self, layer_i: usize);
 
     fn feedforward(&mut self);
+
+    fn predict(&mut self, inputs: &LayerNeurons);
 }
 
 pub trait Backpropable {
@@ -55,9 +57,13 @@ pub trait Backpropable {
 }
 
 pub trait GradientDescendable: Backpropable + Predictable {
-    fn gradient_descent(&mut self);
+    fn update_weights_and_biases(&mut self, dws: NetworkWeights, dbs: NetworkNeurons);
 
-    fn batch_gradient_descent(&mut self);
+    fn batch_gradient_descent(
+        &mut self,
+        batch: &Vec<(LayerNeurons, LayerNeurons)>,
+        batch_size: usize,
+    );
 }
 
 pub trait Trainable: Predictable {

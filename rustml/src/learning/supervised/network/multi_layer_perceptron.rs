@@ -1,12 +1,12 @@
 use super::{
-    Backpropable, LayerNeurons, LayerWeights, NetworkNeurons, NetworkWeights, NeuronWeights,
-    Predictable, Resetable, Shape,
+    Backpropable, GradientDescendable, LayerNeurons, LayerWeights, NetworkNeurons, NetworkWeights,
+    NeuronWeights, Predictable, Resetable, Shape,
 };
 use crate::{
     functions::{
         activation::ActivationFunc, cost::CostFunc, input_normalizations::NormalizationFunc,
     },
-    utils::math::dot_product,
+    utils::math::{add_2d_vecs, add_3d_vecs, dot_product, subtract_2d_vecs, subtract_3d_vecs},
 };
 
 pub struct MultiLayerPerceptron<'a> {
@@ -149,6 +149,11 @@ impl Predictable for MultiLayerPerceptron<'_> {
             self.feedforward_layer(layer_i);
         }
     }
+
+    fn predict(&mut self, inputs: &LayerNeurons) {
+        self.inputs = inputs.to_vec();
+        self.feedforward();
+    }
 }
 
 impl Backpropable for MultiLayerPerceptron<'_> {
@@ -157,7 +162,7 @@ impl Backpropable for MultiLayerPerceptron<'_> {
         &self,
         layer_i: usize,
         prev_cost_activation_derivatives: Option<&LayerNeurons>,
-        expected: Option<&NeuronWeights>,
+        expected: Option<&LayerNeurons>,
     ) -> (LayerWeights, LayerNeurons, LayerNeurons) {
         // f'[l]
         let activation_func_derivative = self.activation_funcs[layer_i].derivative;
@@ -251,7 +256,7 @@ impl Backpropable for MultiLayerPerceptron<'_> {
         )
     }
 
-    fn backprop(&self, expected: &NeuronWeights) -> (NetworkWeights, NetworkNeurons) {
+    fn backprop(&self, expected: &LayerNeurons) -> (NetworkWeights, NetworkNeurons) {
         let (last_layer_dws, last_layer_dbs, last_layer_das) =
             self.backprop_layer(self.layers.len() - 1, None, Some(expected));
 
@@ -269,6 +274,42 @@ impl Backpropable for MultiLayerPerceptron<'_> {
         }
 
         (dws, dbs)
+    }
+}
+
+impl GradientDescendable for MultiLayerPerceptron<'_> {
+    fn update_weights_and_biases(&mut self, dws: NetworkWeights, dbs: NetworkNeurons) {
+        self.weights = subtract_3d_vecs(&self.weights, &dws);
+        self.biases = subtract_2d_vecs(&self.biases, &dbs);
+    }
+
+    fn batch_gradient_descent(
+        &mut self,
+        batch: &Vec<(LayerNeurons, LayerNeurons)>,
+        batch_size: usize,
+    ) {
+        for batch_start in (0..batch.len()).step_by(batch_size) {
+            let mini_batch = &batch[batch_start..batch_start + batch_size];
+            let mut avg_dws: NetworkWeights = vec![];
+            let mut avg_dbs: NetworkNeurons = vec![];
+
+            for data in mini_batch {
+                let inputs = &data.0;
+                let expected = &data.1;
+
+                self.predict(inputs);
+                let (dws, dbs) = self.backprop(&expected);
+
+                if avg_dws.len() == 0 {
+                    avg_dws = dws;
+                } else {
+                    avg_dws = add_3d_vecs(&avg_dws, &dws);
+                    avg_dbs = add_2d_vecs(&avg_dbs, &dbs);
+                }
+            }
+
+            self.update_weights_and_biases(avg_dws, avg_dbs);
+        }
     }
 }
 
@@ -457,7 +498,6 @@ mod tests {
         assert_eq!(net.weights[1].len(), 5);
         assert_eq!(net.biases[1].len(), 5);
 
-        net.inputs = vec![2.0, 1.0, 3.0, 4.0];
         net.weights = vec![
             vec![
                 vec![3.0, 2.0, 1.0, 4.0],
@@ -474,6 +514,7 @@ mod tests {
         ];
         net.biases = vec![vec![3.0, 1.0, 2.0], vec![3.0, 2.0, 1.0, 2.0, 4.0]];
 
+        net.predict(&vec![2.0, 1.0, 3.0, 4.0]);
         net.feedforward();
 
         assert_eq!(net.normalized_inputs, vec![2.0, 1.0, 3.0, 4.0]);
