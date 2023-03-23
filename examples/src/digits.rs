@@ -1,7 +1,7 @@
 use rustml::{
     functions::{
         activation::{RELU, SIGMOID},
-        cost::MSE,
+        cost::CROSS_ENTROPY,
         input_normalizations::NORMALIZATION,
     },
     supervised::network::{
@@ -16,7 +16,7 @@ fn main() {
     let mut net = MultiLayerPerceptronClassification::new(
         vec![784, 16, 16, 10],
         vec![&RELU, &RELU, &SIGMOID],
-        &MSE,
+        &CROSS_ENTROPY,
         &NORMALIZATION,
         vec!["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"],
     );

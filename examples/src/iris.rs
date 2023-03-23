@@ -1,7 +1,7 @@
 use rustml::{
     functions::{
         activation::{RELU, SIGMOID},
-        cost::MSE,
+        cost::CROSS_ENTROPY,
         input_normalizations::NORMALIZATION,
     },
     supervised::network::{
@@ -16,7 +16,7 @@ fn main() {
     let mut net = MultiLayerPerceptronClassification::new(
         vec![4, 6, 3],
         vec![&RELU, &SIGMOID],
-        &MSE,
+        &CROSS_ENTROPY,
         &NORMALIZATION,
         vec!["Iris-setosa", "Iris-versicolor", "Iris-virginica"],
     );
@@ -26,5 +26,5 @@ fn main() {
     let accuracy =
         net.train_and_test_from_csv(path, 5, &vec![1, 2, 3, 4], 0.67, 32, 1_000_000, true, 0.001);
 
-    println!("Iris accuracy: {}%", accuracy * 100.0);
+    println!("\nIris accuracy: {}%", accuracy * 100.0);
 }
