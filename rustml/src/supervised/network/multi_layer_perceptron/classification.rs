@@ -89,8 +89,14 @@ impl Testable for MultiLayerPerceptronClassification<'_> {
         for (inputs, label) in data {
             self.predict(&inputs);
 
-            if self.get_label() == *label {
+            let predicted = self.get_label();
+            if predicted == *label {
                 total_correct += 1.0;
+            } else {
+                println!(
+                    "Incorrect, expected: {label}, predicted: {predicted}, outputs: {:?}",
+                    self.network.activated_layers.last().unwrap()
+                );
             }
         }
 

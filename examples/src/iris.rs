@@ -24,7 +24,7 @@ fn main() {
     let path = &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("data/iris/Iris.csv");
 
     let accuracy =
-        net.train_and_test_from_csv(path, 5, &vec![1, 2, 3, 4], 0.67, 32, 1_000_000, true, 0.001);
+        net.train_and_test_from_csv(path, 5, &vec![1, 2, 3, 4], 0.67, 32, 10_000, true, 0.001);
 
     println!("\nIris accuracy: {}%", accuracy * 100.0);
 }
