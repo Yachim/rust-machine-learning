@@ -59,6 +59,33 @@ pub const CROSS_ENTROPY: CostFunc = CostFunc {
     formula_derivative: r"\frac{y_i}{a^{(L)}_i}",
 };
 
+fn binary_cross_entropy(predicted: &Vec<f32>, expected: &Vec<f32>) -> f32 {
+    assert_eq!(predicted, expected);
+    assert_eq!(predicted.len(), 1);
+
+    let a = predicted[0];
+    let y = expected[0];
+
+    let sum = -(y * a.ln() + (1.0 - y) * (1.0 - a).ln());
+
+    sum
+}
+
+fn binary_cross_entropy_deriv(predicted: f32, expected: f32) -> f32 {
+    expected / predicted + (1.0 - expected) / (1.0 - predicted)
+}
+
+pub const BINARY_CROSS_ENTROPY: CostFunc = CostFunc {
+    function: &binary_cross_entropy,
+    derivative: &binary_cross_entropy_deriv,
+
+    description: "",
+
+    formula: r"-[y \ln a + (1 - y) \ln (1 - a)]",
+    formula_derivative: r"\frac{y}{a} +
+  \frac{1 - y}{1 - a}",
+};
+
 #[cfg(test)]
 mod tests {
     use super::mse;
