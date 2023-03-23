@@ -209,7 +209,7 @@ Where:
 
 <!-- the definition of mse -->
 ```math
-C = MSE = {
+C = {
   \frac{1}{n_L}
   \sum_{j = 0}^{n_L-1}(a^{(L)}_j - y_j)^2
 }
@@ -222,4 +222,22 @@ C = MSE = {
 <!-- the derivative of mse -->
 ```math
 \frac{\partial C}{\partial a^{(L)}_j} = 2(a^{(L)}_j - y_j)
+```
+
+### Cross Entropy
+
+<!-- the definition of cross_entropy -->
+```math
+C = {
+  -\sum_{i=0}^{n_L - 1} y_i \ln a^{(L)}_i
+}
+```
+
+<p align="center">
+  <sup>$y$...the expected values</sup>  
+</p>
+
+<!-- the derivative of cross entropy -->
+```math
+\frac{\partial C}{\partial a^{(L)}_j} = \frac{y_i}{a^{(L)}_i}
 ```
