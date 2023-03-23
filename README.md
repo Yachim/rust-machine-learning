@@ -241,3 +241,23 @@ C = {
 ```math
 \frac{\partial C}{\partial a^{(L)}_j} = \frac{y_i}{a^{(L)}_i}
 ```
+
+### Binary Cross Entropy
+
+<!-- the definition of binary cross entropy -->
+```math
+C = {
+  -[y \ln a + (1 - y) \ln (1 - a)]
+}
+```
+
+<p align="center">
+  <sup>$y$...the expected values</sup>  
+</p>
+
+<!-- the derivative of binary cross entropy -->
+```math
+\frac{\partial C}{\partial a^{(L)}_j} = 
+  \frac{y}{a} +
+  \frac{1 - y}{1 - a}
+```
