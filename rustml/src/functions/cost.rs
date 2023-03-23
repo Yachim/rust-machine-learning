@@ -12,11 +12,6 @@ pub struct CostFunc<'a> {
     pub formula_derivative: &'a str,
 }
 
-/// Mean Squared Error
-///  - network: the Network instance to apply on
-///  - expected: expected output values; same length as last layer of network
-///
-/// returns the cost
 fn mse(predicted: &Vec<f32>, expected: &Vec<f32>) -> f32 {
     assert_eq!(predicted.len(), expected.len());
 
@@ -27,11 +22,6 @@ fn mse(predicted: &Vec<f32>, expected: &Vec<f32>) -> f32 {
     sum / (expected.len() as f32)
 }
 
-/// Derivative of the Mean Squared Error with respect to the activations (predictions)
-///  - network: the Network instance to apply on
-///  - expected: expected output values; same length as last layer of network
-///
-/// returns the derivatives of the cost function with respect to activations in the last layer
 fn mse_deriv(predicted: f32, expected: f32) -> f32 {
     2.0 * (predicted - expected)
 }
@@ -42,8 +32,31 @@ pub const MSE: CostFunc = CostFunc {
 
     description: "",
 
-    formula: "",
-    formula_derivative: "",
+    formula: r"\frac{1}{n_L}
+  \sum_{j = 0}^{n_L-1}(a^{(L)}_j - y_j)^2",
+    formula_derivative: r"\frac{\partial C}{\partial a^{(L)}_j} = 2(a^{(L)}_j - y_j)",
+};
+
+fn cross_entropy(predicted: &Vec<f32>, expected: &Vec<f32>) -> f32 {
+    assert_eq!(predicted, expected);
+
+    let sum = zip(predicted, expected).map(|(a, y)| y * a.ln()).sum();
+
+    sum
+}
+
+fn cross_entropy_deriv(predicted: f32, expected: f32) -> f32 {
+    expected / predicted
+}
+
+pub const CROSS_ENTROPY: CostFunc = CostFunc {
+    function: &cross_entropy,
+    derivative: &cross_entropy_deriv,
+
+    description: "",
+
+    formula: r"-\sum_{i=0}^{n_L - 1} y_i \ln a^{(L)}_i",
+    formula_derivative: r"\frac{y_i}{a^{(L)}_i}",
 };
 
 #[cfg(test)]
