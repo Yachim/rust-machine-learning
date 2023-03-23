@@ -161,7 +161,7 @@ impl CSVTestable for MultiLayerPerceptronClassification<'_> {
             full_data.shuffle(&mut thread_rng());
         }
 
-        let training_len = full_data.len() * training_part as usize;
+        let training_len = (full_data.len() as f32 * training_part) as usize;
 
         let training_data: Vec<(LayerNeurons, LayerNeurons)> = full_data[0..training_len]
             .iter()
