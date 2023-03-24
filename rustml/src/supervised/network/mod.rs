@@ -98,3 +98,18 @@ pub trait CSVPredictable {
         id_start_at: usize,
     );
 }
+
+pub trait CostComputable {
+    // calculate average cost across the whole data set
+    fn avg_cost_from_vec(&mut self, batch: &Vec<(Vec<f32>, Vec<f32>)>) -> f32;
+}
+
+pub trait CSVCostComputable {
+    // calculate average cost across the whole data set
+    fn avg_cost_from_csv(
+        &mut self,
+        file_path: &Path,
+        label_col: usize,
+        data_cols: &Vec<usize>,
+    ) -> f32;
+}

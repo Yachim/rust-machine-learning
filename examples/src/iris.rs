@@ -5,7 +5,8 @@ use rustml::{
         input_normalizations::NORMALIZATION,
     },
     supervised::network::{
-        multi_layer_perceptron::classification::MultiLayerPerceptronClassification, CSVTestable,
+        multi_layer_perceptron::classification::MultiLayerPerceptronClassification,
+        CSVCostComputable, CSVTestable,
     },
 };
 use std::path::PathBuf;
@@ -23,8 +24,20 @@ fn main() {
 
     let path = &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("data/iris/Iris.csv");
 
-    let accuracy =
-        net.train_and_test_from_csv(path, 5, &vec![1, 2, 3, 4], 0.67, 32, 10_000, true, 0.001);
+    let label_col: usize = 5;
+    let data_cols: Vec<usize> = vec![1, 2, 3, 4];
 
-    println!("\nIris accuracy: {}%", accuracy * 100.0);
+    let before_training_cost = net.avg_cost_from_csv(path, label_col, &data_cols);
+
+    let accuracy =
+        net.train_and_test_from_csv(path, label_col, &data_cols, 0.67, 32, 10_000, true, 0.001);
+
+    let after_training_cost = net.avg_cost_from_csv(path, label_col, &data_cols);
+
+    println!();
+    println!(
+        "Cost before training: {}, cost after: {}",
+        before_training_cost, after_training_cost
+    );
+    println!("Iris accuracy: {}%", accuracy * 100.0);
 }

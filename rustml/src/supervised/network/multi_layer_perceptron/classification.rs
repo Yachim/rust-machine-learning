@@ -5,8 +5,9 @@ use crate::{
         activation::ActivationFunc, cost::CostFunc, input_normalizations::NormalizationFunc,
     },
     supervised::network::{
-        multi_layer_perceptron::MultiLayerPerceptron, CSVPredictable, CSVTestable, CSVTrainable,
-        Classifiable, LayerNeurons, Predictable, Resetable, Shape, Testable, Trainable,
+        multi_layer_perceptron::MultiLayerPerceptron, CSVCostComputable, CSVPredictable,
+        CSVTestable, CSVTrainable, Classifiable, CostComputable, LayerNeurons, Predictable,
+        Resetable, Shape, Testable, Trainable,
     },
     utils::{
         csv::{load_labeled_data, load_labeled_data_ohc, load_unlabeled_data, write_data},
@@ -187,6 +188,36 @@ impl CSVTestable for MultiLayerPerceptronClassification<'_> {
             .collect();
 
         self.test(&data)
+    }
+}
+
+impl CostComputable for MultiLayerPerceptronClassification<'_> {
+    fn avg_cost_from_vec(&mut self, batch: &Vec<(Vec<f32>, Vec<f32>)>) -> f32 {
+        let cost_func = self.network.cost_func.function;
+        let mut cost_avg = 0.0;
+
+        for (inputs, expected) in batch {
+            self.predict(inputs);
+
+            let outputs = self.network.activated_layers.last().unwrap();
+
+            cost_avg += cost_func(outputs, expected);
+        }
+
+        let batch_len = batch.len() as f32;
+        cost_avg / batch_len
+    }
+}
+
+impl CSVCostComputable for MultiLayerPerceptronClassification<'_> {
+    fn avg_cost_from_csv(
+        &mut self,
+        file_path: &Path,
+        label_col: usize,
+        data_cols: &Vec<usize>,
+    ) -> f32 {
+        let data = load_labeled_data_ohc(file_path, label_col, data_cols, &self.labels).unwrap();
+        self.avg_cost_from_vec(&data)
     }
 }
 
