@@ -38,7 +38,7 @@ pub const MSE: CostFunc = CostFunc {
 };
 
 fn cross_entropy(predicted: &Vec<f32>, expected: &Vec<f32>) -> f32 {
-    assert_eq!(predicted, expected);
+    assert_eq!(predicted.len(), expected.len());
 
     let sum = zip(predicted, expected).map(|(a, y)| y * a.ln()).sum();
 
@@ -60,7 +60,7 @@ pub const CROSS_ENTROPY: CostFunc = CostFunc {
 };
 
 fn binary_cross_entropy(predicted: &Vec<f32>, expected: &Vec<f32>) -> f32 {
-    assert_eq!(predicted, expected);
+    assert_eq!(predicted.len(), expected.len());
     assert_eq!(predicted.len(), 1);
 
     let a = predicted[0];
