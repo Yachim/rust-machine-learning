@@ -239,7 +239,7 @@ C = {
 
 <!-- the derivative of cross entropy -->
 ```math
-\frac{\partial C}{\partial a^{(L)}_j} = \frac{y_i}{a^{(L)}_i}
+\frac{\partial C}{\partial a^{(L)}_j} = -\frac{y_i}{a^{(L)}_i}
 ```
 
 ### Binary Cross Entropy
