@@ -46,7 +46,7 @@ fn cross_entropy(predicted: &Vec<f32>, expected: &Vec<f32>) -> f32 {
 }
 
 fn cross_entropy_deriv(predicted: f32, expected: f32) -> f32 {
-    expected / predicted
+    -(expected / predicted)
 }
 
 pub const CROSS_ENTROPY: CostFunc = CostFunc {
