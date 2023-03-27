@@ -229,7 +229,7 @@ C = {
 <!-- the definition of cross_entropy -->
 ```math
 C = {
-  -\sum_{i=0}^{n_L - 1} y_i \ln a^{(L)}_i
+  -\sum_{j=0}^{n_L - 1} y_j \ln a^{(L)}_j
 }
 ```
 
@@ -239,7 +239,7 @@ C = {
 
 <!-- the derivative of cross entropy -->
 ```math
-\frac{\partial C}{\partial a^{(L)}_j} = -\frac{y_i}{a^{(L)}_j}
+\frac{\partial C}{\partial a^{(L)}_j} = -\frac{y_j}{a^{(L)}_j}
 ```
 
 ### Binary Cross Entropy
@@ -252,12 +252,12 @@ C = {
 ```
 
 <p align="center">
-  <sup>$y$...the expected values</sup>  
+  <sup>$y$...the expected value</sup>  
 </p>
 
 <!-- the derivative of binary cross entropy -->
 ```math
-\frac{\partial C}{\partial a^{(L)}_j} = 
+\frac{\partial C}{\partial a^{(L)}} = 
   \frac{y}{a} +
   \frac{1 - y}{1 - a}
 ```
