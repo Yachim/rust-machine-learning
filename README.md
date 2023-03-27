@@ -76,12 +76,12 @@ The code's implementation normalizes inputs.
 
 <!-- definition of softmax -->
 ```math
-Softmax(z_j) = \frac{e^{z_j - max_z}}{sum}
+Softmax(z_i) = \frac{e^{z_i - max_z}}{sum}
 ```
 
 <!-- because github had problem processing sum in denominator -->
 ```math
-sum = \sum_{i=0}^{n_l - 1} e^{z_i - max_z}
+sum = \sum_{j=0}^{n_l - 1} e^{z_j - max_z}
 ```
 
 <p align="center">
