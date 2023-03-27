@@ -81,7 +81,7 @@ Softmax(z_j) = \frac{e^{z_j - max_z}}{sum}
 
 <!-- because github had problem processing sum in denominator -->
 ```math
-sum = \sum_{i=0}^{n_z - 1} e^{z - max_z}
+sum = \sum_{i=0}^{n_l - 1} e^{z_i - max_z}
 ```
 
 <p align="center">
@@ -89,7 +89,7 @@ sum = \sum_{i=0}^{n_z - 1} e^{z - max_z}
 </p>
 
 <p align="center">
-  <sup>$n_z$...number of values in the layer</sup>
+  <sup>$n_l$...number of values in the layer</sup>
 </p>
 
 <!-- derivative of softmax -->
@@ -239,7 +239,7 @@ C = {
 
 <!-- the derivative of cross entropy -->
 ```math
-\frac{\partial C}{\partial a^{(L)}_j} = \frac{y_i}{a^{(L)}_i}
+\frac{\partial C}{\partial a^{(L)}_j} = -\frac{y_i}{a^{(L)}_i}
 ```
 
 ### Binary Cross Entropy
