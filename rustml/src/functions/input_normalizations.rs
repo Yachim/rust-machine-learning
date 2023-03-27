@@ -2,6 +2,7 @@
 pub struct NormalizationFunc<'a> {
     pub function: &'a dyn Fn(&Vec<f32>) -> Vec<f32>,
     pub description: &'a str,
+
     /// latex formula
     pub formula: &'a str,
 }
@@ -15,7 +16,6 @@ pub const NO_NORMALIZATION: NormalizationFunc = NormalizationFunc {
     formula: "",
 };
 
-/// mutates the network so that the input is normalized
 fn normalization(input: &Vec<f32>) -> Vec<f32> {
     let max = input
         .iter()
