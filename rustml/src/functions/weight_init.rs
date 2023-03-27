@@ -5,7 +5,7 @@ use rand::{
 };
 use rand_distr::Normal;
 
-pub struct InitFn<'a> {
+pub struct InitFunc<'a> {
     pub function: &'a dyn Fn(usize) -> f32,
 
     pub description: &'a str,
@@ -22,7 +22,7 @@ fn xavier(n: usize) -> f32 {
     Uniform::from(lower..=upper).sample(&mut thread_rng())
 }
 
-pub const XAVIER: InitFn = InitFn {
+pub const XAVIER: InitFunc = InitFunc {
     function: &xavier,
     description: "",
     formula: "",
@@ -36,7 +36,7 @@ fn he(n: usize) -> f32 {
     normal.sample(&mut thread_rng())
 }
 
-pub const HE: InitFn = InitFn {
+pub const HE: InitFunc = InitFunc {
     function: &he,
     description: "",
     formula: "",
