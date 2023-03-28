@@ -34,7 +34,7 @@ struct MultiLayerPerceptron<'a> {
 
 impl<'a> MultiLayerPerceptron<'a> {
     fn normalize_input(&mut self) {
-        let normalization_func = self.normalization_func.function;
+        let normalization_func = self.normalization_func.func;
 
         let inputs = &self.inputs;
         let normalized_inputs = normalization_func(inputs);
@@ -358,7 +358,7 @@ impl Resetable for MultiLayerPerceptron<'_> {
 
             let prev_layer_neuron_cnt = shape[layer_index - 1];
 
-            let layer_weights_init_func = weights_init_funcs[layer_index - 1].init_func.function;
+            let layer_weights_init_func = weights_init_funcs[layer_index - 1].init_func.func;
 
             for _ in 0..layer_neuron_cnt {
                 let mut neuron_weights: NeuronWeights = vec![];

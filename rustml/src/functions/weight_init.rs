@@ -6,7 +6,7 @@ use rand::{
 use rand_distr::Normal;
 
 pub struct InitFunc<'a> {
-    pub function: &'a dyn Fn(usize) -> f32,
+    pub func: &'a dyn Fn(usize) -> f32,
 
     pub description: &'a str,
     /// latex formula
@@ -23,7 +23,7 @@ fn xavier(n: usize) -> f32 {
 }
 
 pub const XAVIER: InitFunc = InitFunc {
-    function: &xavier,
+    func: &xavier,
     description: "",
     formula: "",
 };
@@ -37,7 +37,7 @@ fn he(n: usize) -> f32 {
 }
 
 pub const HE: InitFunc = InitFunc {
-    function: &he,
+    func: &he,
     description: "",
     formula: "",
 };

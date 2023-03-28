@@ -1,7 +1,7 @@
 use std::iter::zip;
 
 pub struct CostFunc<'a> {
-    pub function: &'a dyn Fn(&Vec<f32>, &Vec<f32>) -> f32,
+    pub func: &'a dyn Fn(&Vec<f32>, &Vec<f32>) -> f32,
     pub derivative: &'a dyn Fn(f32, f32) -> f32,
 
     pub description: &'a str,
@@ -27,7 +27,7 @@ fn mse_deriv(predicted: f32, expected: f32) -> f32 {
 }
 
 pub const MSE: CostFunc = CostFunc {
-    function: &mse,
+    func: &mse,
     derivative: &mse_deriv,
 
     description: "",
@@ -52,7 +52,7 @@ fn cross_entropy_deriv(predicted: f32, expected: f32) -> f32 {
 }
 
 pub const CROSS_ENTROPY: CostFunc = CostFunc {
-    function: &cross_entropy,
+    func: &cross_entropy,
     derivative: &cross_entropy_deriv,
 
     description: "",
@@ -78,7 +78,7 @@ fn binary_cross_entropy_deriv(predicted: f32, expected: f32) -> f32 {
 }
 
 pub const BINARY_CROSS_ENTROPY: CostFunc = CostFunc {
-    function: &binary_cross_entropy,
+    func: &binary_cross_entropy,
     derivative: &binary_cross_entropy_deriv,
 
     description: "",

@@ -193,7 +193,7 @@ impl CSVTestable for MultiLayerPerceptronClassification<'_> {
 
 impl CostComputable for MultiLayerPerceptronClassification<'_> {
     fn avg_cost_from_vec(&mut self, batch: &Vec<(Vec<f32>, Vec<f32>)>) -> f32 {
-        let cost_func = self.network.cost_func.function;
+        let cost_func = self.network.cost_func.func;
         let mut cost_avg = 0.0;
 
         for (inputs, expected) in batch {
