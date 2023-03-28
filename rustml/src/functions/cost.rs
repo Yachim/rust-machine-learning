@@ -68,13 +68,13 @@ fn binary_cross_entropy(predicted: &Vec<f32>, expected: &Vec<f32>) -> f32 {
     let a = predicted[0];
     let y = expected[0];
 
-    let sum = -(y * a.ln() + (1.0 - y) * (1.0 - a).ln());
+    let sum = -y * a.ln() - (1.0 - y) * (1.0 - a).ln();
 
     sum
 }
 
 fn binary_cross_entropy_deriv(predicted: f32, expected: f32) -> f32 {
-    expected / predicted + (1.0 - expected) / (1.0 - predicted)
+    -expected / predicted + (1.0 - expected) / (1.0 - predicted)
 }
 
 pub const BINARY_CROSS_ENTROPY: CostFunc = CostFunc {
