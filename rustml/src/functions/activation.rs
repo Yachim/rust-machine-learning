@@ -1,16 +1,6 @@
 use crate::functions::weight_init::{InitFunc, HE, XAVIER};
 use std::f32::consts;
 
-pub struct IndependentFunc<'a> {
-    pub func: &'a dyn Fn(f32) -> f32,
-    pub derivative: &'a dyn Fn(f32) -> f32,
-}
-
-pub struct DependentFunc<'a> {
-    pub func: &'a dyn Fn(&Vec<f32>) -> Vec<f32>,
-    pub derivative: &'a dyn Fn(&Vec<f32>) -> Vec<Vec<f32>>,
-}
-
 /// element-wise independent functions and element-wise dependent functions
 ///  - https://aew61.github.io/blog/artificial_neural_networks/1_background/1.b_activation_functions_and_derivatives.html
 ///
@@ -21,8 +11,14 @@ pub struct DependentFunc<'a> {
 ///
 /// the first value is the function, the second is a the derivative
 pub enum FuncElementWiseDependency<'a> {
-    Independent(IndependentFunc<'a>),
-    Dependent(DependentFunc<'a>),
+    Independent {
+        func: &'a dyn Fn(f32) -> f32,
+        derivative: &'a dyn Fn(f32) -> f32,
+    },
+    Dependent {
+        func: &'a dyn Fn(&Vec<f32>) -> Vec<f32>,
+        derivative: &'a dyn Fn(&Vec<f32>) -> Vec<Vec<f32>>,
+    },
 }
 
 pub struct ActivationFunc<'a> {
@@ -50,10 +46,10 @@ fn sigmoid_deriv(z: f32) -> f32 {
     sig * (1.0 - sig)
 }
 pub const SIGMOID: ActivationFunc = ActivationFunc {
-    funcs: FuncElementWiseDependency::Independent(IndependentFunc {
+    funcs: FuncElementWiseDependency::Independent {
         func: &sigmoid,
         derivative: &sigmoid_deriv,
-    }),
+    },
 
     description: "",
 
@@ -82,10 +78,10 @@ fn relu_deriv(z: f32) -> f32 {
     }
 }
 pub const RELU: ActivationFunc = ActivationFunc {
-    funcs: FuncElementWiseDependency::Independent(IndependentFunc {
+    funcs: FuncElementWiseDependency::Independent {
         func: &relu,
         derivative: &relu_deriv,
-    }),
+    },
 
     description: "",
 
@@ -133,10 +129,10 @@ fn softmax_deriv(zs: &Vec<f32>) -> Vec<Vec<f32>> {
         .collect()
 }
 pub const SOFTMAX: ActivationFunc = ActivationFunc {
-    funcs: FuncElementWiseDependency::Dependent(DependentFunc {
+    funcs: FuncElementWiseDependency::Dependent {
         func: &softmax,
         derivative: &softmax_deriv,
-    }),
+    },
 
     description: "",
 

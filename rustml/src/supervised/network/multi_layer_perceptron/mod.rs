@@ -43,8 +43,8 @@ impl<'a> MultiLayerPerceptron<'a> {
 
     fn activate_independent_layer(&mut self, layer_i: usize) {
         let layer_activation_func = match &self.activation_funcs[layer_i].funcs {
-            FuncElementWiseDependency::Independent(funcs) => funcs.func,
-            FuncElementWiseDependency::Dependent(_) => unreachable!(),
+            FuncElementWiseDependency::Independent { func, .. } => func,
+            FuncElementWiseDependency::Dependent { .. } => unreachable!(),
         };
 
         let layer = &self.layers[layer_i];
@@ -56,8 +56,8 @@ impl<'a> MultiLayerPerceptron<'a> {
 
     fn activate_dependent_layer(&mut self, layer_i: usize) {
         let layer_activation_func = match &self.activation_funcs[layer_i].funcs {
-            FuncElementWiseDependency::Dependent(funcs) => funcs.func,
-            FuncElementWiseDependency::Independent(_) => unreachable!(),
+            FuncElementWiseDependency::Dependent { func, .. } => func,
+            FuncElementWiseDependency::Independent { .. } => unreachable!(),
         };
 
         let layer = &self.layers[layer_i];
@@ -86,10 +86,10 @@ impl<'a> MultiLayerPerceptron<'a> {
         self.layers[layer_i] = new_layer;
 
         match &self.activation_funcs[layer_i].funcs {
-            FuncElementWiseDependency::Independent(_) => {
+            FuncElementWiseDependency::Independent { .. } => {
                 self.activate_independent_layer(layer_i);
             }
-            FuncElementWiseDependency::Dependent(_) => {
+            FuncElementWiseDependency::Dependent { .. } => {
                 self.activate_dependent_layer(layer_i);
             }
         }
@@ -113,8 +113,8 @@ impl<'a> MultiLayerPerceptron<'a> {
     ) -> (LayerWeights, LayerNeurons, LayerNeurons) {
         // f'[l]
         let activation_func_derivative = match &self.activation_funcs[layer_i].funcs {
-            FuncElementWiseDependency::Dependent(_) => unreachable!(),
-            FuncElementWiseDependency::Independent(funcs) => funcs.derivative,
+            FuncElementWiseDependency::Dependent { .. } => unreachable!(),
+            FuncElementWiseDependency::Independent { derivative, .. } => derivative,
         };
 
         // dC/dw[l]
@@ -157,8 +157,8 @@ impl<'a> MultiLayerPerceptron<'a> {
                 // f'[l + 1]
                 let prev_activation_func_derivative =
                     match &self.activation_funcs[layer_i + 1].funcs {
-                        FuncElementWiseDependency::Dependent(_) => unimplemented!(),
-                        FuncElementWiseDependency::Independent(funcs) => funcs.derivative,
+                        FuncElementWiseDependency::Dependent { .. } => unimplemented!(),
+                        FuncElementWiseDependency::Independent { derivative, .. } => derivative,
                     };
 
                 // z[l + 1]
@@ -225,10 +225,10 @@ impl<'a> MultiLayerPerceptron<'a> {
         expected: Option<&LayerNeurons>,
     ) -> (LayerWeights, LayerNeurons, LayerNeurons) {
         match self.activation_funcs[layer_i].funcs {
-            FuncElementWiseDependency::Dependent(_) => {
+            FuncElementWiseDependency::Dependent { .. } => {
                 unimplemented!()
             }
-            FuncElementWiseDependency::Independent(_) => {
+            FuncElementWiseDependency::Independent { .. } => {
                 self.backprop_independent_layer(layer_i, prev_cost_activation_derivatives, expected)
             }
         }
