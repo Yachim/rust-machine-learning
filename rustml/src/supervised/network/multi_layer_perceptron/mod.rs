@@ -105,22 +105,17 @@ impl<'a> MultiLayerPerceptron<'a> {
         }
     }
 
-    /// returns derivatives in order: dC/dw[l], dC/db[l], dC/da[l]
-    ///
-    /// prev_cost_activation_derivatives: dC/da[l + 1]
-    /// not needed only when computing last layer
-    ///
-    /// expected: only needed when computing last_layer
-    ///
-    /// prev as in previous iteration (next) since the iteration should be backwards
-    fn backprop_layer(
+    fn backprop_independent_layer(
         &self,
         layer_i: usize,
         prev_cost_activation_derivatives: Option<&LayerNeurons>,
         expected: Option<&LayerNeurons>,
     ) -> (LayerWeights, LayerNeurons, LayerNeurons) {
         // f'[l]
-        let activation_funcs = &self.activation_funcs[layer_i].funcs;
+        let activation_func_derivative = match &self.activation_funcs[layer_i].funcs {
+            FuncElementWiseDependency::Dependent(_) => unreachable!(),
+            FuncElementWiseDependency::Independent(funcs) => funcs.derivative,
+        };
 
         // dC/dw[l]
         let mut cost_weight_derivatives: LayerWeights = vec![];
@@ -137,7 +132,6 @@ impl<'a> MultiLayerPerceptron<'a> {
         let weights = &self.weights[layer_i];
 
         let mut tmp = vec![];
-        // dC/da[l + 1]
         let prev_cost_activation_derivatives_unwrapped = prev_cost_activation_derivatives
             .unwrap_or_else(|| {
                 tmp = vec![];
@@ -161,8 +155,11 @@ impl<'a> MultiLayerPerceptron<'a> {
                 cost_func_derivative(activated_neuron, expected_neuron)
             } else {
                 // f'[l + 1]
-                //let prev_activation_func_derivative = self.activation_funcs[layer_i + 1].derivative;
-                let prev_activation_funcs = &self.activation_funcs[layer_i + 1].funcs;
+                let prev_activation_func_derivative =
+                    match &self.activation_funcs[layer_i + 1].funcs {
+                        FuncElementWiseDependency::Dependent(_) => unimplemented!(),
+                        FuncElementWiseDependency::Independent(funcs) => funcs.derivative,
+                    };
 
                 // z[l + 1]
                 let prev_layer = &self.layers[layer_i + 1];
@@ -170,38 +167,19 @@ impl<'a> MultiLayerPerceptron<'a> {
                 // w[l + 1]
                 let prev_weights = &self.weights[layer_i + 1];
 
-                match prev_activation_funcs {
-                    FuncElementWiseDependency::Dependent(ref funcs) => {
-                        unimplemented!()
-                    }
-                    FuncElementWiseDependency::Independent(ref funcs) => {
-                        let derivative = funcs.derivative;
-
-                        prev_cost_activation_derivatives_unwrapped
-                            .iter()
-                            .enumerate()
-                            .map(|(prev_neuron_i, a)| {
-                                a * derivative(prev_layer[prev_neuron_i])
-                                    * prev_weights[prev_neuron_i][neuron_i]
-                            })
-                            .sum()
-                    }
-                }
+                prev_cost_activation_derivatives_unwrapped
+                    .iter()
+                    .enumerate()
+                    .map(|(prev_neuron_i, a)| {
+                        a * prev_activation_func_derivative(prev_layer[prev_neuron_i])
+                            * prev_weights[prev_neuron_i][neuron_i]
+                    })
+                    .sum()
             };
             cost_activation_derivatives.push(cost_activation_derivative);
 
             // da[l][j]/dz[l][j]
-            //let activation_neuron_derivative = activation_func_derivative(neuron);
-            let activation_neuron_derivative = match activation_funcs {
-                FuncElementWiseDependency::Dependent(ref funcs) => {
-                    unimplemented!()
-                }
-                FuncElementWiseDependency::Independent(ref funcs) => {
-                    let derivative = funcs.derivative;
-
-                    derivative(neuron)
-                }
-            };
+            let activation_neuron_derivative = activation_func_derivative(neuron);
 
             // dC/db[l][j]
             let cost_bias_derivative = cost_activation_derivative * activation_neuron_derivative;
@@ -231,6 +209,31 @@ impl<'a> MultiLayerPerceptron<'a> {
             cost_activation_derivatives,
         )
     }
+
+    /// returns derivatives in order: dC/dw[l], dC/db[l], dC/da[l]
+    ///
+    /// prev_cost_activation_derivatives: dC/da[l + 1]
+    /// not needed only when computing last layer
+    ///
+    /// expected: only needed when computing last_layer
+    ///
+    /// prev as in previous iteration (next) since the iteration should be backwards
+    fn backprop_layer(
+        &self,
+        layer_i: usize,
+        prev_cost_activation_derivatives: Option<&LayerNeurons>,
+        expected: Option<&LayerNeurons>,
+    ) -> (LayerWeights, LayerNeurons, LayerNeurons) {
+        match self.activation_funcs[layer_i].funcs {
+            FuncElementWiseDependency::Dependent(_) => {
+                unimplemented!()
+            }
+            FuncElementWiseDependency::Independent(_) => {
+                self.backprop_independent_layer(layer_i, prev_cost_activation_derivatives, expected)
+            }
+        }
+    }
+
     fn backprop(&self, expected: &LayerNeurons) -> (NetworkWeights, NetworkNeurons) {
         let (last_layer_dws, last_layer_dbs, last_layer_das) =
             self.backprop_layer(self.layers.len() - 1, None, Some(expected));
