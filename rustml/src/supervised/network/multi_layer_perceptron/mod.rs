@@ -41,6 +41,30 @@ impl<'a> MultiLayerPerceptron<'a> {
         self.normalized_inputs = normalized_inputs;
     }
 
+    fn activate_independent_layer(&mut self, layer_i: usize) {
+        let layer_activation_func = match &self.activation_funcs[layer_i].funcs {
+            FuncElementWiseDependency::Independent(funcs) => funcs.func,
+            FuncElementWiseDependency::Dependent(_) => unreachable!(),
+        };
+
+        let layer = &self.layers[layer_i];
+
+        for (neuron_i, &neuron) in layer.iter().enumerate() {
+            self.activated_layers[layer_i][neuron_i] = layer_activation_func(neuron);
+        }
+    }
+
+    fn activate_dependent_layer(&mut self, layer_i: usize) {
+        let layer_activation_func = match &self.activation_funcs[layer_i].funcs {
+            FuncElementWiseDependency::Dependent(funcs) => funcs.func,
+            FuncElementWiseDependency::Independent(_) => unreachable!(),
+        };
+
+        let layer = &self.layers[layer_i];
+
+        self.activated_layers[layer_i] = layer_activation_func(&layer);
+    }
+
     fn feedforward_layer(&mut self, layer_i: usize) {
         let prev_layer = if layer_i == 0 {
             &self.normalized_inputs
@@ -50,42 +74,23 @@ impl<'a> MultiLayerPerceptron<'a> {
         let layer_weights = &self.weights[layer_i];
         let layer_biases = &self.biases[layer_i];
 
-        let layer_activation_funcs = &self.activation_funcs[layer_i].funcs;
+        let mut new_layer: LayerNeurons = vec![];
+        for neuron_i in 0..layer_weights.len() {
+            let neuron_weights = &layer_weights[neuron_i];
+            let neuron_bias = layer_biases[neuron_i];
 
-        match layer_activation_funcs {
-            FuncElementWiseDependency::Independent(func) => {
-                let layer_activation_func = func.func;
+            let new_neuron = dot_product(prev_layer, neuron_weights) + neuron_bias;
+            new_layer.push(new_neuron);
+        }
 
-                let mut new_layer: LayerNeurons = vec![];
-                let mut new_activated_layer: LayerNeurons = vec![];
-                for neuron_i in 0..layer_weights.len() {
-                    let neuron_weights = &layer_weights[neuron_i];
-                    let neuron_bias = layer_biases[neuron_i];
+        self.layers[layer_i] = new_layer;
 
-                    let new_neuron = dot_product(prev_layer, neuron_weights) + neuron_bias;
-                    new_layer.push(new_neuron);
-
-                    let new_activated_neuron = layer_activation_func(new_neuron);
-                    new_activated_layer.push(new_activated_neuron);
-                }
-
-                self.layers[layer_i] = new_layer;
-                self.activated_layers[layer_i] = new_activated_layer;
+        match &self.activation_funcs[layer_i].funcs {
+            FuncElementWiseDependency::Independent(_) => {
+                self.activate_independent_layer(layer_i);
             }
-            FuncElementWiseDependency::Dependent(func) => {
-                let layer_activation_func = func.func;
-
-                let mut new_layer: LayerNeurons = vec![];
-                for neuron_i in 0..layer_weights.len() {
-                    let neuron_weights = &layer_weights[neuron_i];
-                    let neuron_bias = layer_biases[neuron_i];
-
-                    let new_neuron = dot_product(prev_layer, neuron_weights) + neuron_bias;
-                    new_layer.push(new_neuron);
-                }
-
-                self.activated_layers[layer_i] = layer_activation_func(&new_layer);
-                self.layers[layer_i] = new_layer;
+            FuncElementWiseDependency::Dependent(_) => {
+                self.activate_dependent_layer(layer_i);
             }
         }
     }
@@ -427,7 +432,7 @@ impl Trainable for MultiLayerPerceptron<'_> {
 mod tests {
     use super::{MultiLayerPerceptron, Predictable};
     use crate::functions::{
-        activation::{RELU, SIGMOID},
+        activation::{RELU, SIGMOID, SOFTMAX},
         cost::MSE,
         input_normalizations::NO_NORMALIZATION,
     };
@@ -573,6 +578,52 @@ mod tests {
         net.feedforward_layer(1);
 
         assert_eq!(net.layers[1], vec![28.0, 23.0, 31.0]);
+    }
+
+    #[test]
+    fn test_feedforward_layer_softmax() {
+        let mut net =
+            MultiLayerPerceptron::new(vec![2, 3], vec![&SOFTMAX], &MSE, &NO_NORMALIZATION);
+        // test initialization
+        assert_eq!(net.inputs.len(), 2);
+        assert_eq!(net.normalized_inputs.len(), 2);
+
+        assert_eq!(net.layers.len(), 1);
+        assert_eq!(net.activated_layers.len(), 1);
+        assert_eq!(net.weights.len(), 1);
+        assert_eq!(net.biases.len(), 1);
+
+        assert_eq!(net.layers[0].len(), 3);
+        assert_eq!(net.activated_layers[0].len(), 3);
+        assert_eq!(net.weights[0].len(), 3);
+        assert_eq!(net.biases[0].len(), 3);
+
+        assert_eq!(net.weights[0][0].len(), 2);
+        assert_eq!(net.weights[0][1].len(), 2);
+        assert_eq!(net.weights[0][2].len(), 2);
+
+        net.inputs = vec![3.0, 2.0];
+
+        net.normalize_input();
+        assert_eq!(net.normalized_inputs, vec![3.0, 2.0]);
+
+        net.weights[0] = vec![vec![3.0, 4.0], vec![2.0, 4.0], vec![3.0, 5.0]];
+        net.biases[0] = vec![1.0, 1.0, 3.0];
+
+        net.feedforward_layer(0);
+
+        assert_eq!(net.layers[0], vec![18.0, 15.0, 22.0]);
+
+        let activations = &net.activated_layers[0];
+        let expected = vec![
+            0.01797011806881207,
+            0.0008946794968705339,
+            0.9811352024343174,
+        ];
+        assert!(activations
+            .iter()
+            .zip(expected)
+            .all(|(a, y)| (a - y).abs() < 0.001));
     }
 
     #[test]
