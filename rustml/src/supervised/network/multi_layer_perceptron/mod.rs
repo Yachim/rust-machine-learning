@@ -7,7 +7,9 @@ use super::{
 };
 use crate::{
     functions::{
-        activation::ActivationFunc, cost::CostFunc, input_normalizations::NormalizationFunc,
+        activation::{ActivationFunc, FuncElementWiseDependency},
+        cost::CostFunc,
+        input_normalizations::NormalizationFunc,
     },
     utils::math::{
         add_2d_vecs, add_3d_vecs, divide_vector_float_2d, divide_vector_float_3d, dot_product,
@@ -47,23 +49,44 @@ impl<'a> MultiLayerPerceptron<'a> {
         let layer_weights = &self.weights[layer_i];
         let layer_biases = &self.biases[layer_i];
 
-        let layer_activation_func = self.activation_funcs[layer_i].function;
+        let layer_activation_funcs = &self.activation_funcs[layer_i].funcs;
 
-        let mut new_layer: LayerNeurons = vec![];
-        let mut new_activated_layer: LayerNeurons = vec![];
-        for neuron_i in 0..layer_weights.len() {
-            let neuron_weights = &layer_weights[neuron_i];
-            let neuron_bias = layer_biases[neuron_i];
+        match layer_activation_funcs {
+            FuncElementWiseDependency::Independent(func) => {
+                let layer_activation_func = func.func;
 
-            let new_neuron = dot_product(prev_layer, neuron_weights) + neuron_bias;
-            new_layer.push(new_neuron);
+                let mut new_layer: LayerNeurons = vec![];
+                let mut new_activated_layer: LayerNeurons = vec![];
+                for neuron_i in 0..layer_weights.len() {
+                    let neuron_weights = &layer_weights[neuron_i];
+                    let neuron_bias = layer_biases[neuron_i];
 
-            let new_activated_neuron = layer_activation_func(new_neuron);
-            new_activated_layer.push(new_activated_neuron);
+                    let new_neuron = dot_product(prev_layer, neuron_weights) + neuron_bias;
+                    new_layer.push(new_neuron);
+
+                    let new_activated_neuron = layer_activation_func(new_neuron);
+                    new_activated_layer.push(new_activated_neuron);
+                }
+
+                self.layers[layer_i] = new_layer;
+                self.activated_layers[layer_i] = new_activated_layer;
+            }
+            FuncElementWiseDependency::Dependent(func) => {
+                let layer_activation_func = func.func;
+
+                let mut new_layer: LayerNeurons = vec![];
+                for neuron_i in 0..layer_weights.len() {
+                    let neuron_weights = &layer_weights[neuron_i];
+                    let neuron_bias = layer_biases[neuron_i];
+
+                    let new_neuron = dot_product(prev_layer, neuron_weights) + neuron_bias;
+                    new_layer.push(new_neuron);
+                }
+
+                self.activated_layers[layer_i] = layer_activation_func(&new_layer);
+                self.layers[layer_i] = new_layer;
+            }
         }
-
-        self.layers[layer_i] = new_layer;
-        self.activated_layers[layer_i] = new_activated_layer;
     }
 
     fn feedforward(&mut self) {
@@ -91,7 +114,7 @@ impl<'a> MultiLayerPerceptron<'a> {
         expected: Option<&LayerNeurons>,
     ) -> (LayerWeights, LayerNeurons, LayerNeurons) {
         // f'[l]
-        let activation_func_derivative = self.activation_funcs[layer_i].derivative;
+        let activation_funcs = &self.activation_funcs[layer_i].funcs;
 
         // dC/dw[l]
         let mut cost_weight_derivatives: LayerWeights = vec![];
@@ -108,6 +131,7 @@ impl<'a> MultiLayerPerceptron<'a> {
         let weights = &self.weights[layer_i];
 
         let mut tmp = vec![];
+        // dC/da[l + 1]
         let prev_cost_activation_derivatives_unwrapped = prev_cost_activation_derivatives
             .unwrap_or_else(|| {
                 tmp = vec![];
@@ -131,7 +155,8 @@ impl<'a> MultiLayerPerceptron<'a> {
                 cost_func_derivative(activated_neuron, expected_neuron)
             } else {
                 // f'[l + 1]
-                let prev_activation_func_derivative = self.activation_funcs[layer_i + 1].derivative;
+                //let prev_activation_func_derivative = self.activation_funcs[layer_i + 1].derivative;
+                let prev_activation_funcs = &self.activation_funcs[layer_i + 1].funcs;
 
                 // z[l + 1]
                 let prev_layer = &self.layers[layer_i + 1];
@@ -139,19 +164,38 @@ impl<'a> MultiLayerPerceptron<'a> {
                 // w[l + 1]
                 let prev_weights = &self.weights[layer_i + 1];
 
-                prev_cost_activation_derivatives_unwrapped
-                    .iter()
-                    .enumerate()
-                    .map(|(prev_neuron_i, a)| {
-                        a * prev_activation_func_derivative(prev_layer[prev_neuron_i])
-                            * prev_weights[prev_neuron_i][neuron_i]
-                    })
-                    .sum()
+                match prev_activation_funcs {
+                    FuncElementWiseDependency::Dependent(ref funcs) => {
+                        unimplemented!()
+                    }
+                    FuncElementWiseDependency::Independent(ref funcs) => {
+                        let derivative = funcs.derivative;
+
+                        prev_cost_activation_derivatives_unwrapped
+                            .iter()
+                            .enumerate()
+                            .map(|(prev_neuron_i, a)| {
+                                a * derivative(prev_layer[prev_neuron_i])
+                                    * prev_weights[prev_neuron_i][neuron_i]
+                            })
+                            .sum()
+                    }
+                }
             };
             cost_activation_derivatives.push(cost_activation_derivative);
 
             // da[l][j]/dz[l][j]
-            let activation_neuron_derivative = activation_func_derivative(neuron);
+            //let activation_neuron_derivative = activation_func_derivative(neuron);
+            let activation_neuron_derivative = match activation_funcs {
+                FuncElementWiseDependency::Dependent(ref funcs) => {
+                    unimplemented!()
+                }
+                FuncElementWiseDependency::Independent(ref funcs) => {
+                    let derivative = funcs.derivative;
+
+                    derivative(neuron)
+                }
+            };
 
             // dC/db[l][j]
             let cost_bias_derivative = cost_activation_derivative * activation_neuron_derivative;
@@ -306,7 +350,7 @@ impl Resetable for MultiLayerPerceptron<'_> {
 
             let prev_layer_neuron_cnt = shape[layer_index - 1];
 
-            let layer_weights_init_func = weights_init_funcs[layer_index - 1].init_fn.function;
+            let layer_weights_init_func = weights_init_funcs[layer_index - 1].init_func.function;
 
             for _ in 0..layer_neuron_cnt {
                 let mut neuron_weights: NeuronWeights = vec![];
