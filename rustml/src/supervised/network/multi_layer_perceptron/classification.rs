@@ -94,12 +94,17 @@ impl Testable for MultiLayerPerceptronClassification<'_> {
             if predicted == *label {
                 total_correct += 1.0;
             } else {
+                println!("Incorrect, expected: {label}, predicted: {predicted}");
+                println!("inputs: {:?}", self.network.inputs);
                 println!(
-                    "Incorrect, expected: {label}, predicted: {predicted}, outputs: {:?}",
+                    "outputs: {:?}",
                     self.network.activated_layers.last().unwrap()
                 );
+                println!("last layer: {:?}\n", self.network.layers.last().unwrap());
             }
         }
+        println!("weights: {:#?}", self.network.weights);
+        println!("biases: {:#?}", self.network.biases);
 
         total_correct / total_cnt
     }

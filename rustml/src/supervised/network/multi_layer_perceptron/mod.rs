@@ -415,7 +415,6 @@ impl Trainable for MultiLayerPerceptron<'_> {
         println!("beginning training at {time_start}");
 
         let mut shuffled_batch = batch.clone();
-        shuffled_batch.shuffle(&mut thread_rng());
 
         for i in 0..iteration_cnt {
             let epoch = i + 1;
@@ -423,6 +422,7 @@ impl Trainable for MultiLayerPerceptron<'_> {
 
             println!("beginning training epoch {epoch} out of {iteration_cnt} at {time_epoch}");
 
+            shuffled_batch.shuffle(&mut thread_rng());
             self.batch_gradient_descent(&shuffled_batch, batch_size, learning_rate);
         }
 
