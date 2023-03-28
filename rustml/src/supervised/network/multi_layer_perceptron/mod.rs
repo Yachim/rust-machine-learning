@@ -1,5 +1,6 @@
 pub mod classification;
 use chrono::offset::Local;
+use rand::{seq::SliceRandom, thread_rng};
 
 use super::{
     LayerNeurons, LayerWeights, NetworkNeurons, NetworkWeights, NeuronWeights, Predictable,
@@ -258,7 +259,6 @@ impl<'a> MultiLayerPerceptron<'a> {
         self.biases = multiply_vector_float_2d(&b_diff, learning_rate);
     }
 
-    // FIXME: shuffle?
     fn batch_gradient_descent(
         &mut self,
         batch: &Vec<(LayerNeurons, LayerNeurons)>,
@@ -406,13 +406,16 @@ impl Trainable for MultiLayerPerceptron<'_> {
         let time_start = Local::now();
         println!("beginning training at {time_start}");
 
+        let mut shuffled_batch = batch.clone();
+        shuffled_batch.shuffle(&mut thread_rng());
+
         for i in 0..iteration_cnt {
             let epoch = i + 1;
             let time_epoch = Local::now();
 
             println!("beginning training epoch {epoch} out of {iteration_cnt} at {time_epoch}");
 
-            self.batch_gradient_descent(batch, batch_size, learning_rate);
+            self.batch_gradient_descent(&shuffled_batch, batch_size, learning_rate);
         }
 
         let time_end = Local::now();
