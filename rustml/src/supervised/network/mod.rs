@@ -54,6 +54,15 @@ pub trait Classifiable {
     fn get_label(&self) -> &str;
 }
 
+pub trait Debuggable {
+    fn get_weights(&self) -> &NetworkWeights;
+    fn get_biases(&self) -> &NetworkNeurons;
+    fn get_inputs(&self) -> &LayerNeurons;
+    fn get_normalized_inputs(&self) -> &LayerNeurons;
+    fn get_layers(&self) -> &NetworkNeurons;
+    fn get_activated_layers(&self) -> &NetworkNeurons;
+}
+
 pub trait CSVTrainable {
     fn train_from_csv(
         &mut self,

@@ -3,8 +3,8 @@ use chrono::offset::Local;
 use rand::{seq::SliceRandom, thread_rng};
 
 use super::{
-    LayerNeurons, LayerWeights, NetworkNeurons, NetworkWeights, NeuronWeights, Predictable,
-    Resetable, Shape, Trainable,
+    Debuggable, LayerNeurons, LayerWeights, NetworkNeurons, NetworkWeights, NeuronWeights,
+    Predictable, Resetable, Shape, Trainable,
 };
 use crate::{
     functions::{
@@ -428,6 +428,32 @@ impl Trainable for MultiLayerPerceptron<'_> {
 
         let time_end = Local::now();
         println!("finishing training at {time_end}");
+    }
+}
+
+impl Debuggable for MultiLayerPerceptron<'_> {
+    fn get_weights(&self) -> &NetworkWeights {
+        &self.weights
+    }
+
+    fn get_biases(&self) -> &NetworkNeurons {
+        &self.biases
+    }
+
+    fn get_inputs(&self) -> &LayerNeurons {
+        &self.inputs
+    }
+
+    fn get_normalized_inputs(&self) -> &LayerNeurons {
+        &self.normalized_inputs
+    }
+
+    fn get_layers(&self) -> &NetworkNeurons {
+        &self.layers
+    }
+
+    fn get_activated_layers(&self) -> &NetworkNeurons {
+        &self.activated_layers
     }
 }
 

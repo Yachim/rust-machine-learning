@@ -4,8 +4,8 @@ use crate::{
     },
     supervised::network::{
         multi_layer_perceptron::MultiLayerPerceptron, CSVCostComputable, CSVPredictable,
-        CSVTestable, CSVTrainable, Classifiable, CostComputable, LayerNeurons, Predictable,
-        Resetable, Shape, Testable, Trainable,
+        CSVTestable, CSVTrainable, Classifiable, CostComputable, Debuggable, LayerNeurons,
+        NetworkNeurons, NetworkWeights, Predictable, Resetable, Shape, Testable, Trainable,
     },
     utils::{
         csv::{load_labeled_data, load_labeled_data_ohc, load_unlabeled_data, write_data},
@@ -105,6 +105,32 @@ impl Testable for MultiLayerPerceptronClassification<'_> {
         println!("biases: {:#?}", self.network.biases);
 
         total_correct / total_cnt
+    }
+}
+
+impl Debuggable for MultiLayerPerceptronClassification<'_> {
+    fn get_weights(&self) -> &NetworkWeights {
+        self.network.get_weights()
+    }
+
+    fn get_biases(&self) -> &NetworkNeurons {
+        self.network.get_biases()
+    }
+
+    fn get_inputs(&self) -> &LayerNeurons {
+        self.network.get_inputs()
+    }
+
+    fn get_normalized_inputs(&self) -> &LayerNeurons {
+        self.network.get_normalized_inputs()
+    }
+
+    fn get_layers(&self) -> &NetworkNeurons {
+        self.network.get_layers()
+    }
+
+    fn get_activated_layers(&self) -> &NetworkNeurons {
+        self.network.get_activated_layers()
     }
 }
 
