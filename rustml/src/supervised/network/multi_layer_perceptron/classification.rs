@@ -1,5 +1,3 @@
-// TODO: fix usage of String vs &str
-
 use crate::{
     functions::{
         activation::ActivationFunc, cost::CostFunc, input_normalizations::NormalizationFunc,
