@@ -1,3 +1,6 @@
+// just in case, so that ln or y/a is defined
+// (cross entropy)
+use std::f32::EPSILON;
 use std::iter::zip;
 
 pub struct CostFunc<'a> {
@@ -41,14 +44,14 @@ fn cross_entropy(predicted: &Vec<f32>, expected: &Vec<f32>) -> f32 {
     assert_eq!(predicted.len(), expected.len());
 
     let sum = zip(predicted, expected)
-        .map(|(a, y)| y * a.ln())
+        .map(|(a, y)| y * (a + EPSILON).ln())
         .sum::<f32>();
 
     -sum
 }
 
 fn cross_entropy_deriv(predicted: f32, expected: f32) -> f32 {
-    -(expected / predicted)
+    -(expected / (predicted + EPSILON))
 }
 
 pub const CROSS_ENTROPY: CostFunc = CostFunc {
@@ -68,13 +71,13 @@ fn binary_cross_entropy(predicted: &Vec<f32>, expected: &Vec<f32>) -> f32 {
     let a = predicted[0];
     let y = expected[0];
 
-    let sum = -y * a.ln() - (1.0 - y) * (1.0 - a).ln();
+    let sum = -y * (a + EPSILON).ln() - (1.0 - y) * (1.0 - a + EPSILON).ln();
 
     sum
 }
 
 fn binary_cross_entropy_deriv(predicted: f32, expected: f32) -> f32 {
-    -expected / predicted + (1.0 - expected) / (1.0 - predicted)
+    -expected / (predicted + EPSILON) + (1.0 - expected) / (1.0 - predicted + EPSILON)
 }
 
 pub const BINARY_CROSS_ENTROPY: CostFunc = CostFunc {
