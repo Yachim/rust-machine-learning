@@ -27,11 +27,10 @@ a^{(l)}_j = \sigma(z^{(l)}_j)
 z^{(l)}_j = \sum_{k = 0}^{n_{l - 1} - 1} (a^{(l - 1)}_k w^{(l)}_{jk}) + b^{(l)}_j
 ```
 <p align="center">
-  <sup>$n_l$...number of inputs in the layer $l$</sup>
-</p>
-
-<p align="center">
-  <sup>$l$...any layer in the network</sup>
+  <sup>
+    $n_l$...number of inputs in the layer $l$ <br>
+    $l$...any layer in the network
+  </sup>
 </p>
 
 ## Activation functions and their derivatives
@@ -85,11 +84,10 @@ sum = \sum_{j=0}^{n_l - 1} e^{z_j - max_z}
 ```
 
 <p align="center">
-  <sup>$max_z$...maximum value of all values in the layer</sup>
-</p>
-
-<p align="center">
-  <sup>$n_l$...number of values in the layer</sup>
+  <sup>
+    $max_z$...maximum value of all values in the layer <br>
+    $n_l$...number of values in the layer
+  </sup>
 </p>
 
 <!-- derivative of softmax -->
@@ -105,6 +103,35 @@ sum = \sum_{j=0}^{n_l - 1} e^{z_j - max_z}
   \end{array}
 \right.
 ```
+
+### Element-wise dependent vs independent activations derivatives
+Some activations (e.g. sigmoid) are independent on other neurons in the layer. Others, like softmax are not.
+
+<br>
+
+Independent:
+<!-- independent -->
+```math
+\frac{\partial C}{\partial z^{(l)}_j} = 
+  \frac{\partial C}{\partial a^{(l)}_j} 
+  \frac{\partial a^{(l)}_j}{\partial z^{(l)}_j}
+```
+
+Dependent:  
+<!-- independent -->
+```math
+\frac{\partial C}{\partial z^{(l)}_j} = 
+  \sum_{i=0}^{n_l - 1}
+  \frac{\partial C}{\partial a^{(l)}_i} 
+  \frac{\partial a^{(l)}_i}{\partial z^{(l)}_j}
+```
+
+<p align="center">
+  <sup>
+    $l$...any layer in the network <br>
+    $n_l$...number of neurons in the layer $l$
+  </sup>
+</p>
 
 ## Derivatives of cost functions
 
