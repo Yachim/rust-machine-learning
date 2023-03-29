@@ -1,4 +1,4 @@
-# No Code Machine Learning
+# Rust Machine Learning
 
 Suppose we have this sample network:
 
