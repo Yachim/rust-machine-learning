@@ -128,6 +128,7 @@ sum = \sum_{j=0}^{n_l - 1} e^{z_j - max_z}
 ```
 
 <!-- partial derivative of C with respect to a^{(L - 1)}_k -->
+<!-- not needed
 ```math
 \frac{\partial C}{\partial a^{(L - 1)}_k} = {
   \sum_{j=0}^{n_L - 1}
@@ -139,6 +140,7 @@ sum = \sum_{j=0}^{n_l - 1} e^{z_j - max_z}
   w^{(L)}_{jk}
 }
 ```
+-->
 
 <p align="center">
   <sup>$L$...last layer of the network</sup>
@@ -162,6 +164,7 @@ For any layer $l$ in the network:
 ```
 
 <!-- partial derivative of C with respect to a^{(l - 1)}_k -->
+<!-- not needed
 ```math
 \frac{\partial C}{\partial a^{(l - 1)}_k} = {
   \sum_{j=0}^{n_l - 1}
@@ -169,6 +172,7 @@ For any layer $l$ in the network:
   w^{(l)}_{jk}
 }
 ```
+-->
 
 Where:
 
