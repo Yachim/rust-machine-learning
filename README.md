@@ -104,6 +104,94 @@ sum = \sum_{j=0}^{n_l - 1} e^{z_j - max_z}
 \right.
 ```
 
+## Derivatives of cost functions
+
+<!-- partial derivative of C with respect to w^{(L)}_{jk} -->
+```math
+\frac{\partial C}{\partial w^{(L)}_{jk}} = {
+  \frac{\partial C}{\partial z^{(L)}_j}
+  \frac{\partial z^{(L)}_j}{\partial w^{(L)}_{jk}}
+} = {
+  \frac{\partial C}{\partial z^{(L)}_j}
+  a^{(L - 1)}_k
+}
+```
+
+<!-- partial derivative of C with respect to b^{(L)}_j -->
+```math
+\frac{\partial C}{\partial b^{(L)}_j} = {
+  \frac{\partial C}{\partial z^{(L)}_j}
+  \frac{\partial z^{(L)}_j}{\partial b^{(L)}_j}
+} = {
+  \frac{\partial C}{\partial z^{(L)}_j}
+}
+```
+
+<!-- partial derivative of C with respect to a^{(L - 1)}_k -->
+```math
+\frac{\partial C}{\partial a^{(L - 1)}_k} = {
+  \sum_{j=0}^{n_L - 1}
+  \frac{\partial C}{\partial z^{(L)}_j}
+  \frac{\partial z^{(L)}_j}{\partial a^{(L - 1)}_k}
+} = {
+  \sum_{j=0}^{n_L - 1}
+  \frac{\partial C}{\partial z^{(L)}_j}
+  w^{(L)}_{jk}
+}
+```
+
+<p align="center">
+  <sup>$L$...last layer of the network</sup>
+</p>
+
+For any layer $l$ in the network:
+
+<!-- partial derivative of C with respect to w^{(l)}_{jk} -->
+```math
+\frac{\partial C}{\partial w^{(l)}_{jk}} = {
+  \frac{\partial C}{\partial z^{(l)}_j}
+  a^{(l - 1)}_k
+}
+```
+
+<!-- partial derivative of C with respect to b^{(l)}_j -->
+```math
+\frac{\partial C}{\partial b^{(l)}_j} = {
+  \frac{\partial C}{\partial z^{(l)}_j}
+}
+```
+
+<!-- partial derivative of C with respect to a^{(l - 1)}_k -->
+```math
+\frac{\partial C}{\partial a^{(l - 1)}_k} = {
+  \sum_{j=0}^{n_l - 1}
+  \frac{\partial C}{\partial z^{(l)}_j}
+  w^{(l)}_{jk}
+}
+```
+
+Where:
+
+<!-- partial derivative of C with respect to a^{(l)}_k if l = L -->
+```math
+\frac{\partial C}{\partial a^{(l)}_j} = \frac{\partial C}{\partial a^{(L)}_j} \qquad 
+\textrm{if $l=L$}
+```
+
+<!-- partial derivative of C with respect to a^{(l)}_k if l != L -->
+```math
+\frac{\partial C}{\partial a^{(l)}_j} = {
+  \sum_{i=0}^{n_{l + 1} - 1}
+  \frac{\partial C}{\partial z^{(l + 1)}_i}
+  \frac{\partial z^{(l + 1)}_i}{\partial a^{(l)}_j}
+} = {
+  \sum_{i=0}^{n_{l + 1} - 1}
+  \frac{\partial C}{\partial z^{(l + 1)}_i}
+  w^{(l + 1)}_{ij}
+} \qquad
+\textrm{otherwise}
+```
+
 ### Element-wise dependent vs independent activations derivatives
 Some activations (e.g. sigmoid) are independent on other neurons in the layer. Others, like softmax are not.
 
@@ -132,105 +220,6 @@ Dependent:
     $n_l$...number of neurons in the layer $l$
   </sup>
 </p>
-
-## Derivatives of cost functions
-
-<!-- partial derivative of C with respect to w^{(L)}_{jk} -->
-```math
-\frac{\partial C}{\partial w^{(L)}_{jk}} = {
-  \frac{\partial C}{\partial a^{(L)}_j}
-  \frac{\partial a^{(L)}_j}{\partial z^{(L)}_j}
-  \frac{\partial z^{(L)}_j}{\partial w^{(L)}_{jk}}
-} = {
-  \frac{\partial C}{\partial a^{(L)}_j}
-  f'_{L}(z^{(L)}_j)
-  a^{(L - 1)}_k
-}
-```
-
-<!-- partial derivative of C with respect to b^{(L)}_j -->
-```math
-\frac{\partial C}{\partial b^{(L)}_j} = {
-  \frac{\partial C}{\partial a^{(L)}_j}
-  \frac{\partial a^{(L)}_j}{\partial z^{(L)}_j}
-  \frac{\partial z^{(L)}_j}{\partial b^{(L)}_j}
-} = {
-  \frac{\partial C}{\partial a^{(L)}_j}
-  f'_{L}(z^{(L)}_j)
-}
-```
-
-<!-- partial derivative of C with respect to a^{(L - 1)}_k -->
-```math
-\frac{\partial C}{\partial a^{(L - 1)}_k} = {
-  \sum_{j=0}^{n_L - 1}
-  \frac{\partial C}{\partial a^{(L)}_j}
-  \frac{\partial a^{(L)}_j}{\partial z^{(L)}_j}
-  \frac{\partial z^{(L)}_j}{\partial a^{(L - 1)}_k}
-} = {
-  \sum_{j=0}^{n_L - 1}
-  \frac{\partial C}{\partial a^{(L)}_j}
-  f'_{L}(z^{(L)}_j)
-  w^{(L)}_{jk}
-}
-```
-
-<p align="center">
-  <sup>$L$...last layer of the network</sup>
-</p>
-
-For any layer $l$ in the network:
-
-<!-- partial derivative of C with respect to w^{(l)}_{jk} -->
-```math
-\frac{\partial C}{\partial w^{(l)}_{jk}} = {
-  \frac{\partial C}{\partial a^{(l)}_j}
-  f'_{l}(z^{(l)}_j)
-  a^{(l - 1)}_k
-}
-```
-
-<!-- partial derivative of C with respect to b^{(l)}_j -->
-```math
-\frac{\partial C}{\partial b^{(l)}_j} = {
-  \frac{\partial C}{\partial a^{(l)}_j}
-  f'_{l}(z^{(l)}_j)
-}
-```
-
-<!-- partial derivative of C with respect to a^{(l - 1)}_k -->
-```math
-\frac{\partial C}{\partial a^{(l - 1)}_k} = {
-  \sum_{j=0}^{n_l - 1}
-  \frac{\partial C}{\partial a^{(l)}_j}
-  f'_{l}(z^{(l)}_j)
-  w^{(l)}_{jk}
-}
-```
-
-Where:
-
-<!-- partial derivative of C with respect to a^{(l)}_k if l = L -->
-```math
-\frac{\partial C}{\partial a^{(l)}_j} = \frac{\partial C}{\partial a^{(L)}_j} \qquad 
-\textrm{if $l=L$}
-```
-
-<!-- partial derivative of C with respect to a^{(l)}_k if l != L -->
-```math
-\frac{\partial C}{\partial a^{(l)}_j} = {
-  \sum_{i=0}^{n_{l + 1} - 1}
-  \frac{\partial C}{\partial a^{(l + 1)}_i}
-  \frac{\partial a^{(l + 1)}_i}{\partial z^{(l + 1)}_i}
-  \frac{\partial z^{(l + 1)}_i}{\partial a^{(l)}_j}
-} = {
-  \sum_{i=0}^{n_{l + 1} - 1}
-  \frac{\partial C}{\partial a^{(l + 1)}_i}
-  f'_{l + 1}(z^{(l + 1)}_i)
-  w^{(l + 1)}_{ij}
-} \qquad
-\textrm{otherwise}
-```
 
 ### Mean Squared Error (MSE)
 
