@@ -202,7 +202,72 @@ impl<'a> MultiLayerPerceptron<'a> {
             FuncElementWiseDependency::Independent { derivative, .. } => derivative,
         };
 
-        todo!()
+        // z[l]
+        let layer = &self.layers[layer_i];
+        // a[l]
+        let activated_layer = &self.activated_layers[layer_i];
+        // w[l + 1]
+        let prev_weights = &self.weights[layer_i + 1];
+
+        // a[l - 1]
+        let next_activated_layer = if layer_i == 0 {
+            &self.normalized_inputs
+        } else {
+            &self.activated_layers[layer_i - 1]
+        };
+
+        // dC/da[l]
+        let cost_activation_derivatives: Vec<f32> = if layer_i == self.layers.len() - 1 {
+            let expected = expected.unwrap();
+
+            let cost_func_derivative = self.cost_func.derivative;
+
+            activated_layer
+                .iter()
+                .enumerate()
+                .map(|(j, &activated_neuron)| cost_func_derivative(activated_neuron, expected[j]))
+                .collect()
+        } else {
+            (0..activated_layer.len())
+                .map(|j| {
+                    prev_cost_value_derivatives
+                        .unwrap()
+                        .iter()
+                        .enumerate()
+                        .fold(0.0, |acc, (i, &dc_dzi)| acc + dc_dzi * prev_weights[i][j])
+                })
+                .collect()
+        };
+
+        // da[l]/dz[l]
+        let activation_value_derivatives = layer.iter().map(|&z| activation_func_derivative(z));
+
+        // dC/dz[l]
+        let cost_value_derivatives: LayerNeurons = cost_activation_derivatives
+            .iter()
+            .zip(activation_value_derivatives)
+            .map(|(&dc_da, da_dz)| dc_da * da_dz)
+            .collect();
+
+        // dC/dw[l]
+        let cost_weight_derivatives: LayerWeights = cost_value_derivatives
+            .iter()
+            .map(|dc_dzj| {
+                next_activated_layer
+                    .iter()
+                    .map(|next_ak| dc_dzj * next_ak)
+                    .collect()
+            })
+            .collect();
+
+        // dC/db[l]
+        let cost_bias_derivatives = cost_value_derivatives.clone();
+
+        (
+            cost_weight_derivatives,
+            cost_bias_derivatives,
+            cost_value_derivatives,
+        )
     }
 
     /// returns derivatives in order: dC/dw[l], dC/db[l], dC/dz[l]
