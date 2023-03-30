@@ -1,3 +1,4 @@
+// TODO: fix test failures and implement test for softmax backprop
 pub mod classification;
 use chrono::offset::Local;
 use rand::{seq::SliceRandom, thread_rng};
@@ -105,13 +106,68 @@ impl<'a> MultiLayerPerceptron<'a> {
         }
     }
 
-    fn backprop_dependent_layer(
+    /// calculates dC/dz[l]
+    fn calculate_cost_value_derivative_independent(
         &self,
         layer_i: usize,
         prev_cost_value_derivatives: Option<&LayerNeurons>,
         expected: Option<&LayerNeurons>,
-    ) -> (LayerWeights, LayerNeurons, LayerNeurons) {
-        // f'[l]
+    ) -> LayerNeurons {
+        let activation_func_derivative = match &self.activation_funcs[layer_i].funcs {
+            FuncElementWiseDependency::Independent { derivative, .. } => derivative,
+            FuncElementWiseDependency::Dependent { .. } => unreachable!(),
+        };
+
+        // z[l]
+        let layer = &self.layers[layer_i];
+        // a[l]
+        let activated_layer = &self.activated_layers[layer_i];
+        // w[l + 1]
+        let prev_weights = &self.weights[layer_i + 1];
+
+        // dC/da[l]
+        let cost_activation_derivatives: Vec<f32> = if layer_i == self.layers.len() - 1 {
+            let expected = expected.unwrap();
+
+            let cost_func_derivative = self.cost_func.derivative;
+
+            activated_layer
+                .iter()
+                .enumerate()
+                .map(|(j, &activated_neuron)| cost_func_derivative(activated_neuron, expected[j]))
+                .collect()
+        } else {
+            (0..activated_layer.len())
+                .map(|j| {
+                    prev_cost_value_derivatives
+                        .unwrap()
+                        .iter()
+                        .enumerate()
+                        .fold(0.0, |acc, (i, &dc_dzi)| acc + dc_dzi * prev_weights[i][j])
+                })
+                .collect()
+        };
+
+        // da[l]/dz[l]
+        let activation_value_derivatives = layer.iter().map(|&z| activation_func_derivative(z));
+
+        // dC/dz[l]
+        let cost_value_derivatives: LayerNeurons = cost_activation_derivatives
+            .iter()
+            .zip(activation_value_derivatives)
+            .map(|(&dc_da, da_dz)| dc_da * da_dz)
+            .collect();
+
+        cost_value_derivatives
+    }
+
+    /// calculates dC/dz[l]
+    fn calculate_cost_value_derivative_dependent(
+        &self,
+        layer_i: usize,
+        prev_cost_value_derivatives: Option<&LayerNeurons>,
+        expected: Option<&LayerNeurons>,
+    ) -> LayerNeurons {
         let activation_func_derivative = match &self.activation_funcs[layer_i].funcs {
             FuncElementWiseDependency::Dependent { derivative, .. } => derivative,
             FuncElementWiseDependency::Independent { .. } => unreachable!(),
@@ -123,13 +179,6 @@ impl<'a> MultiLayerPerceptron<'a> {
         let activated_layer = &self.activated_layers[layer_i];
         // w[l + 1]
         let prev_weights = &self.weights[layer_i + 1];
-
-        // a[l - 1]
-        let next_activated_layer = if layer_i == 0 {
-            &self.normalized_inputs
-        } else {
-            &self.activated_layers[layer_i - 1]
-        };
 
         // dC/da[l]
         let cost_activation_derivatives: Vec<f32> = if layer_i == self.layers.len() - 1 {
@@ -169,105 +218,30 @@ impl<'a> MultiLayerPerceptron<'a> {
             })
             .collect();
 
-        // dC/dw[l]
-        let cost_weight_derivatives: LayerWeights = cost_value_derivatives
-            .iter()
-            .map(|dc_dzj| {
-                next_activated_layer
-                    .iter()
-                    .map(|next_ak| dc_dzj * next_ak)
-                    .collect()
-            })
-            .collect();
-
-        // dC/db[l]
-        let cost_bias_derivatives = cost_value_derivatives.clone();
-
-        (
-            cost_weight_derivatives,
-            cost_bias_derivatives,
-            cost_value_derivatives,
-        )
+        cost_value_derivatives
     }
 
-    fn backprop_independent_layer(
+    /// calculates dC/dz[l]
+    fn calculate_cost_value_derivative(
         &self,
         layer_i: usize,
         prev_cost_value_derivatives: Option<&LayerNeurons>,
         expected: Option<&LayerNeurons>,
-    ) -> (LayerWeights, LayerNeurons, LayerNeurons) {
-        // f'[l]
-        let activation_func_derivative = match &self.activation_funcs[layer_i].funcs {
-            FuncElementWiseDependency::Dependent { .. } => unreachable!(),
-            FuncElementWiseDependency::Independent { derivative, .. } => derivative,
-        };
-
-        // z[l]
-        let layer = &self.layers[layer_i];
-        // a[l]
-        let activated_layer = &self.activated_layers[layer_i];
-        // w[l + 1]
-        let prev_weights = &self.weights[layer_i + 1];
-
-        // a[l - 1]
-        let next_activated_layer = if layer_i == 0 {
-            &self.normalized_inputs
-        } else {
-            &self.activated_layers[layer_i - 1]
-        };
-
-        // dC/da[l]
-        let cost_activation_derivatives: Vec<f32> = if layer_i == self.layers.len() - 1 {
-            let expected = expected.unwrap();
-
-            let cost_func_derivative = self.cost_func.derivative;
-
-            activated_layer
-                .iter()
-                .enumerate()
-                .map(|(j, &activated_neuron)| cost_func_derivative(activated_neuron, expected[j]))
-                .collect()
-        } else {
-            (0..activated_layer.len())
-                .map(|j| {
-                    prev_cost_value_derivatives
-                        .unwrap()
-                        .iter()
-                        .enumerate()
-                        .fold(0.0, |acc, (i, &dc_dzi)| acc + dc_dzi * prev_weights[i][j])
-                })
-                .collect()
-        };
-
-        // da[l]/dz[l]
-        let activation_value_derivatives = layer.iter().map(|&z| activation_func_derivative(z));
-
-        // dC/dz[l]
-        let cost_value_derivatives: LayerNeurons = cost_activation_derivatives
-            .iter()
-            .zip(activation_value_derivatives)
-            .map(|(&dc_da, da_dz)| dc_da * da_dz)
-            .collect();
-
-        // dC/dw[l]
-        let cost_weight_derivatives: LayerWeights = cost_value_derivatives
-            .iter()
-            .map(|dc_dzj| {
-                next_activated_layer
-                    .iter()
-                    .map(|next_ak| dc_dzj * next_ak)
-                    .collect()
-            })
-            .collect();
-
-        // dC/db[l]
-        let cost_bias_derivatives = cost_value_derivatives.clone();
-
-        (
-            cost_weight_derivatives,
-            cost_bias_derivatives,
-            cost_value_derivatives,
-        )
+    ) -> LayerNeurons {
+        match &self.activation_funcs[layer_i].funcs {
+            FuncElementWiseDependency::Dependent { .. } => self
+                .calculate_cost_value_derivative_dependent(
+                    layer_i,
+                    prev_cost_value_derivatives,
+                    expected,
+                ),
+            FuncElementWiseDependency::Independent { .. } => self
+                .calculate_cost_value_derivative_independent(
+                    layer_i,
+                    prev_cost_value_derivatives,
+                    expected,
+                ),
+        }
     }
 
     /// returns derivatives in order: dC/dw[l], dC/db[l], dC/dz[l]
@@ -284,14 +258,36 @@ impl<'a> MultiLayerPerceptron<'a> {
         prev_cost_value_derivatives: Option<&LayerNeurons>,
         expected: Option<&LayerNeurons>,
     ) -> (LayerWeights, LayerNeurons, LayerNeurons) {
-        match self.activation_funcs[layer_i].funcs {
-            FuncElementWiseDependency::Dependent { .. } => {
-                self.backprop_dependent_layer(layer_i, prev_cost_value_derivatives, expected)
-            }
-            FuncElementWiseDependency::Independent { .. } => {
-                self.backprop_independent_layer(layer_i, prev_cost_value_derivatives, expected)
-            }
-        }
+        // a[l - 1]
+        let next_activated_layer = if layer_i == 0 {
+            &self.normalized_inputs
+        } else {
+            &self.activated_layers[layer_i - 1]
+        };
+
+        // dC/dz[l]
+        let cost_value_derivatives =
+            self.calculate_cost_value_derivative(layer_i, prev_cost_value_derivatives, expected);
+
+        // dC/dw[l]
+        let cost_weight_derivatives: LayerWeights = cost_value_derivatives
+            .iter()
+            .map(|dc_dzj| {
+                next_activated_layer
+                    .iter()
+                    .map(|next_ak| dc_dzj * next_ak)
+                    .collect()
+            })
+            .collect();
+
+        // dC/db[l]
+        let cost_bias_derivatives = cost_value_derivatives.clone();
+
+        (
+            cost_weight_derivatives,
+            cost_bias_derivatives,
+            cost_value_derivatives,
+        )
     }
 
     fn backprop(&self, expected: &LayerNeurons) -> (NetworkWeights, NetworkNeurons) {
